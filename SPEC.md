@@ -147,7 +147,22 @@ service. It does nothing while the session is off.
   whenever one starts playing during it, through its media session, which the
   notification listener gives access to. The media sessions are asked for
   afresh when a session starts, as Android does not always announce a new
-  one. A video that is paused does not go into picture-in-picture when its
+  one.
+
+  Not every app says through its media session that it is playing: a
+  YouTube Short in a floating window reports no state at all, and a pause
+  sent to it does nothing. For those, Pawse asks Android for the sound
+  itself (audio focus), which makes whoever has it stop, as an incoming call
+  would, and gives it straight back. Nothing says which app the sound is
+  coming from, so this is done only when sound is playing, no app that is
+  allowed to play says it is the one, no call is on, and a blocked app has a
+  media session or a floating window. While a blocked app's window is
+  floating this is looked at every two seconds, as a touch can set it
+  playing again without anything announcing it. The cost: sound from an
+  unblocked app that has no media session of its own (some games, some
+  browsers) would be stopped too while a blocked window floats.
+
+  A video that is paused does not go into picture-in-picture when its
   app is left, so during a session a blocked app has no floating window to
   begin with, unless it was already floating when the session started.
 * **Calls**: a blocked app is *in a call* while it has a notification of the
@@ -412,7 +427,8 @@ and 5.
   by MIUI? If not, a kill would end the session, and the rule in section 4
   needs another signal.
 * Do snoozed notifications stay hidden through a long session, and do they
-  sound or light the screen each time they are snoozed again?
+  sound or light the screen each time they are snoozed again? Do they come
+  back by themselves after a session, up to fifteen minutes later?
 * Do WhatsApp and Telegram mark their call notifications with the call
   category, for incoming and ongoing calls alike? If not, calls in blocked
   apps need another signal.
@@ -487,12 +503,11 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
    milestone 5.*
 5. **Hush** — the notification listener: hiding notifications, pausing
    playback, letting calls through. *Built. Tried on the phone with YouTube:
-   starting a session paused the video and hid its notification. Once, with
-   the video floating before the scan, it was not paused; the cause was not
-   found, and the listener now asks for the media sessions afresh at every
-   start and logs what it sees (`adb logcat -s Pawse`, the line beginning
-   "hush on"). Not tried yet: a call in a blocked app, a notification coming
-   back after a session, and an app pressed to play again during one.*
+   starting a session paused an ordinary video and hid its notification, and
+   Gotify's notifications were hidden as they arrived. A floating YouTube
+   Short was not paused, as it reports no playback state; taking the sound
+   away was added for that and is not yet tried. Also not tried: a call in a
+   blocked app, and a notification coming back after a session.*
 6. **Releases** — the signing key and the workflow, from Dev-kit.
 
 ## 12. Later

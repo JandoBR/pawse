@@ -42,6 +42,29 @@ object Quiet {
             .map { it.first }
             .toSet()
 
+    /**
+     * Whether to silence whatever is playing by taking the sound away from it,
+     * for the apps that play without saying so through a media session (a
+     * YouTube Short does). Nothing says which app the sound is coming from,
+     * so it is worked out: sound is playing, no app that is allowed to play
+     * says it is the one, and a blocked app is in a position to be.
+     *
+     * [saysPlaying] is the apps whose media session reports playing;
+     * [candidates] is the blocked apps with a media session or a floating
+     * window. Never during a call: that would cut the call off.
+     */
+    fun takesSound(
+        soundPlaying: Boolean,
+        saysPlaying: Set<String>,
+        candidates: Set<String>,
+        blocked: Set<String>,
+        inCall: Set<String>,
+    ): Boolean =
+        soundPlaying &&
+            inCall.isEmpty() &&
+            saysPlaying.none { it !in blocked } &&
+            candidates.any { it in blocked }
+
     /** Whether [app] is paused when it plays. Not while it is in a call. */
     fun pauses(app: String, blocked: Set<String>, inCall: Set<String>): Boolean =
         app in blocked && app !in inCall

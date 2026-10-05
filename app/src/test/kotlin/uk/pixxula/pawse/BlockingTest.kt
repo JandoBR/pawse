@@ -83,6 +83,26 @@ class BlockingTest {
     }
 
     @Test
+    fun soundIsTakenFromABlockedAppThatDoesNotSayItIsPlaying() {
+        fun takes(
+            sound: Boolean = true,
+            says: Set<String> = emptySet(),
+            candidates: Set<String> = setOf("app.blocked"),
+            inCall: Set<String> = emptySet(),
+        ) = Quiet.takesSound(sound, says, candidates, blocked, inCall)
+
+        assertEquals(true, takes())
+        // Silence, or nothing blocked that could be playing: nothing to do.
+        assertEquals(false, takes(sound = false))
+        assertEquals(false, takes(candidates = emptySet()))
+        assertEquals(false, takes(candidates = setOf("app.free")))
+        // An app that is allowed to play says the sound is its own.
+        assertEquals(false, takes(says = setOf("app.free")))
+        // A call would be cut off.
+        assertEquals(false, takes(inCall = setOf("app.other")))
+    }
+
+    @Test
     fun aFloatingFreeAppIsLeftAlone() {
         assertNull(Blocking.toCover(listOf(full("app.launcher"), floating("app.free")), blocked))
     }

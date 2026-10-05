@@ -77,6 +77,7 @@ class Watcher : AccessibilityService() {
         if (blocked.isEmpty()) {
             handler.removeCallbacks(recheck)
             cover.hide()
+            Hush.floatingWindows(emptySet())
             return
         }
 
@@ -101,6 +102,7 @@ class Watcher : AccessibilityService() {
             bounds[seen] = Rect().also { window.getBoundsInScreen(it) }
         }
         log(bounds.keys, unnamed)
+        Hush.floatingWindows(bounds.keys.filter { it.floating }.map { it.app }.toSet())
 
         handler.removeCallbacks(recheck)
         if (unnamed && rechecks < MAX_RECHECKS) {

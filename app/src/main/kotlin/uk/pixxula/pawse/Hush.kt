@@ -2,6 +2,9 @@ package uk.pixxula.pawse
 
 import android.content.ComponentName
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
@@ -41,6 +44,7 @@ class Hush : NotificationListenerService() {
     override fun onListenerConnected() {
         Log.i(TAG, "hush connected")
         connected = true
+        live = this
         store = Store.get(this)
         sessions = getSystemService(MediaSessionManager::class.java)
         store.listen(stateChanged)
@@ -53,6 +57,8 @@ class Hush : NotificationListenerService() {
     override fun onListenerDisconnected() {
         Log.i(TAG, "hush disconnected")
         connected = false
+        live = null
+        handler.removeCallbacks(silenceLater)
         store.unlisten(stateChanged)
         sessions.removeOnActiveSessionsChangedListener(sessionsChanged)
         watch(emptyList())
@@ -82,6 +88,7 @@ class Hush : NotificationListenerService() {
         // Watching them pauses the ones that are playing.
         val playing = sessions.getActiveSessions(ComponentName(this, Hush::class.java))
         watch(playing)
+        silenceIfNeeded()
         Log.i(
             TAG,
             "hush on: ${showing.size} notifications showing, media sessions of " +
@@ -120,6 +127,47 @@ class Hush : NotificationListenerService() {
             watched[controller] = callback
             pauseIfBlocked(controller, controller.playbackState)
         }
+        handler.post(silenceLater)
+    }
+
+    // Some playback never shows as playing in a media session, so pausing it
+    // through one does nothing. For that there is audio focus: asking for the
+    // sound makes whoever has it stop, as an incoming call would.
+
+    private val silenceLater = Runnable { silenceIfNeeded() }
+
+    private fun silenceIfNeeded() {
+        handler.removeCallbacks(silenceLater)
+        if (!connected || blocked.isEmpty()) return
+        val candidates = watched.keys.map { it.packageName }.toSet() + floating
+        if (candidates.none { it in blocked }) return
+        // A floating window can be set playing again by a touch, which
+        // nothing announces: while one is there, keep looking.
+        if (floating.any { it in blocked }) handler.postDelayed(silenceLater, LOOK_AGAIN_MILLIS)
+
+        val audio = getSystemService(AudioManager::class.java)
+        val saysPlaying = watched.keys
+            .filter { it.playbackState?.state in PLAYING }
+            .map { it.packageName }
+            .toSet()
+        val take = Quiet.takesSound(
+            soundPlaying = audio.isMusicActive && audio.mode == AudioManager.MODE_NORMAL,
+            saysPlaying = saysPlaying,
+            candidates = candidates,
+            blocked = blocked,
+            inCall = inCall,
+        )
+        if (!take) return
+
+        val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setAudioAttributes(
+                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).build(),
+            )
+            .build()
+        audio.requestAudioFocus(request)
+        // Given straight back: the app that lost it for good does not resume.
+        handler.postDelayed({ audio.abandonAudioFocusRequest(request) }, HOLD_SOUND_MILLIS)
+        Log.d(TAG, "took the sound away, for ${candidates.filter { it in blocked }}")
     }
 
     private fun pauseIfBlocked(controller: MediaController, state: PlaybackState?) {
@@ -132,6 +180,22 @@ class Hush : NotificationListenerService() {
     companion object {
         private const val TAG = "Pawse"
         private const val SNOOZE_MILLIS = 15 * 60 * 1000L
+        private const val LOOK_AGAIN_MILLIS = 2_000L
+        private const val HOLD_SOUND_MILLIS = 500L
+
+        /** The live listener, for the watcher to tell about floating windows. */
+        @Volatile
+        private var live: Hush? = null
+
+        /** The apps with a floating window on screen, as the watcher sees them. */
+        @Volatile
+        private var floating: Set<String> = emptySet()
+
+        fun floatingWindows(apps: Set<String>) {
+            if (apps == floating) return
+            floating = apps
+            live?.let { it.handler.post(it.silenceLater) }
+        }
 
         /** Playing, or about to: an app that is still buffering gets no head start. */
         private val PLAYING = setOf(
