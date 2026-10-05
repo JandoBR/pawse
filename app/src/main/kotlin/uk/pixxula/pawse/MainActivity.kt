@@ -1,7 +1,9 @@
 package uk.pixxula.pawse
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
@@ -44,6 +46,7 @@ class MainActivity : ComponentActivity() {
     private var session by mutableStateOf(SessionState())
     private var watcher by mutableStateOf(WatcherState.OFF)
     private var nfc by mutableStateOf(Nfc.ABSENT)
+    private var phoneMissing by mutableStateOf(emptySet<Missing>())
     private var keysPrompt by mutableStateOf<KeysPrompt?>(null)
 
     private var listening = false
@@ -65,7 +68,16 @@ class MainActivity : ComponentActivity() {
                     Screen.HOME -> HomeScreen(
                         session = session,
                         watcher = watcher,
+                        nfc = nfc,
+                        missing = Session.missing(session, phoneMissing),
                         openAccessibility = { open(Settings.ACTION_ACCESSIBILITY_SETTINGS) },
+                        openAppInfo = {
+                            open(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, ownPackage())
+                        },
+                        allowBattery = {
+                            open(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, ownPackage())
+                        },
+                        openNfcSettings = { open(Settings.ACTION_NFC_SETTINGS) },
                         openBlockList = { screen = Screen.BLOCK_LIST },
                         openKeys = { screen = Screen.KEYS },
                     )
@@ -123,11 +135,8 @@ class MainActivity : ComponentActivity() {
             Watcher.running -> WatcherState.ON
             else -> WatcherState.STOPPED
         }
-        nfc = when (nfcAdapter?.isEnabled) {
-            null -> Nfc.ABSENT
-            true -> Nfc.ON
-            false -> Nfc.OFF
-        }
+        nfc = Device.nfc(this)
+        phoneMissing = Device.missing(this)
         // A force-stop switches the service off without telling it, so a
         // session can be stored as on with nothing behind it.
         if (!switchedOn) store.update(Session::endBecauseWatcherIsOff)
@@ -141,9 +150,16 @@ class MainActivity : ComponentActivity() {
         super.onPause()
     }
 
-    private fun open(settingsPage: String) {
-        startActivity(Intent(settingsPage))
+    private fun open(settingsPage: String, data: Uri? = null) {
+        try {
+            startActivity(Intent(settingsPage, data))
+        } catch (e: ActivityNotFoundException) {
+            // This phone has no such page: Settings itself is the next best.
+            startActivity(Intent(Settings.ACTION_SETTINGS))
+        }
     }
+
+    private fun ownPackage(): Uri = Uri.fromParts("package", packageName, null)
 
     private fun setBlocked(app: String, blocked: Boolean) {
         val protected = Device.protectedApps(this)

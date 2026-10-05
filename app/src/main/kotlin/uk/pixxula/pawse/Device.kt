@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.nfc.NfcAdapter
+import android.os.PowerManager
 import android.os.SystemClock
 import android.provider.Settings
 import android.provider.Telephony
@@ -27,9 +29,23 @@ object Device {
         return enabled.split(':').any { ComponentName.unflattenFromString(it) == watcher }
     }
 
+    /** Whether the phone has been told not to stop Pawse to save battery. */
+    fun exemptFromBatterySaving(context: Context): Boolean =
+        context.getSystemService(PowerManager::class.java)
+            .isIgnoringBatteryOptimizations(context.packageName)
+
+    fun nfc(context: Context): Nfc = when (NfcAdapter.getDefaultAdapter(context)?.isEnabled) {
+        null -> Nfc.ABSENT
+        true -> Nfc.ON
+        false -> Nfc.OFF
+    }
+
     /** What the phone lacks for a session to start. */
-    fun missing(context: Context): Set<Missing> =
-        if (watcherSwitchedOn(context) && Watcher.running) emptySet() else setOf(Missing.WATCHER)
+    fun missing(context: Context): Set<Missing> = buildSet {
+        if (!watcherSwitchedOn(context) || !Watcher.running) add(Missing.WATCHER)
+        if (!exemptFromBatterySaving(context)) add(Missing.BATTERY)
+        if (nfc(context) != Nfc.ON) add(Missing.NFC)
+    }
 
     /**
      * The apps that can never be blocked: Pawse, every launcher (on MIUI the

@@ -28,9 +28,15 @@
     <string name="home_block_list">Block list</string>
 
     <string name="setup_title">Before a session can start</string>
+    <string name="setup_title_on">Needs attention</string>
     <string name="setup_watcher_off">The watcher is off. Pawse needs its accessibility service to know which app is on screen.</string>
     <string name="setup_watcher_stopped">The watcher is switched on but not running, so nothing is being blocked. Switch Pawse off and on again in accessibility settings.</string>
     <string name="setup_open_accessibility">Open accessibility settings</string>
+    <string name="setup_restricted">If Android says the setting is restricted: open Pawse’s app info, tap the three dots at the top, and choose “Allow restricted settings”. Then try again.</string>
+    <string name="setup_open_app_info">Open app info</string>
+    <string name="setup_battery">The phone may stop Pawse to save battery, and blocking would stop with it. On the page that opens, choose “No restrictions” or “Allow”.</string>
+    <string name="setup_allow_battery">Exempt Pawse from battery saving</string>
+    <string name="setup_nfc_off">NFC is switched off, so a tag cannot be read.</string>
     <string name="setup_no_keys">No key is registered. A key is an NFC tag that starts and ends a session.</string>
     <string name="setup_add_key">Add a key</string>
     <string name="setup_no_apps">No apps are on the block list.</string>

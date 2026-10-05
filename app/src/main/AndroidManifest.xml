@@ -3,6 +3,8 @@
 
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- To ask, in one dialog, not to be stopped to save battery. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
 
     <!-- Lets the app see apps that have a launcher icon, for their names and

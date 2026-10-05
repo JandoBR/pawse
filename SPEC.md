@@ -13,7 +13,7 @@ Started from the note in the vault (`Projects/Rust/Scrolly(App focus)/idea.md`):
 > apps, basically drawing a layer on top until the nfc tag gets scanned.
 
 The decisions that were open in the draft are settled and recorded in
-section 9. Milestones 1 to 3 are built (section 11). What can only be found out on
+section 9. Milestones 1 to 4 are built (section 11). What can only be found out on
 the phone is listed in section 10, with what has been answered so far.
 
 ## 1. Overview
@@ -319,7 +319,7 @@ If the Flutter-less shell works out, it goes back into Dev-kit as an
 | Notification access | Hiding blocked apps' notifications, pausing their playback, knowing when one is in a call |
 | NFC | Reading and writing tags |
 | Vibrate | Confirming a scan |
-| Ignore battery optimisations | Not being stopped by MIUI |
+| Ignore battery optimisations, and asking for it | Not being stopped by MIUI |
 
 Listing installed apps uses a `<queries>` entry for launcher activities in the
 manifest, not "query all packages". No internet permission, no device admin,
@@ -437,6 +437,11 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 * After a restart of the phone the service comes back by itself, with the app
   never opened, at the moment the phone is first unlocked: not before, as the
   app's storage is locked until then. No boot receiver is needed.
+* Asking for the battery-saving exemption opens MIUI's own "Battery saver"
+  page for Pawse and not Android's dialog. Choosing "No restrictions" there
+  is what Android reports as exempt, so one check covers both. MIUI's
+  separate "Autostart" switch cannot be read by an app; whether it matters is
+  part of the day of normal use.
 * Force-stopping does switch the service off: Android removes it from the
   enabled services, and blocking stops. The service is told nothing first, as
   section 4 assumes.
@@ -464,7 +469,11 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
    registered from the Keys screen, then scanned to start and to end a
    session, from the home screen and from behind the cover.*
 4. **Home and setup** — session status, the checklist, the battery-saving
-   exemption, ending the session when the service is switched off.
+   exemption, ending the session when the service is switched off. *Built:
+   the checklist names whatever is missing of accessibility, the battery-
+   saving exemption, NFC, a key and a blocked app, each with its button, and
+   a scan with something missing opens it. Notification access joins it in
+   milestone 5.*
 5. **Hush** — the notification listener: hiding notifications, pausing
    playback, letting calls through.
 6. **Releases** — the signing key and the workflow, from Dev-kit.
@@ -473,11 +482,6 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 
 Only if using it shows the need; none of it is planned.
 
-* Making a blocked app's floating window go away, where now it is only
-  covered. Android gives no way to close another app's picture-in-picture
-  window; the routes are a gesture that drags it to the dismiss target, which
-  needs the service to be allowed to perform gestures, or pausing its
-  playback (milestone 5) and seeing whether the app then closes it.
 * A quick-settings tile or widget that shows whether a session is on.
 * A key per block list ("Work" on the desk, "Evening" by the bed).
 * Blocking websites in the browser.

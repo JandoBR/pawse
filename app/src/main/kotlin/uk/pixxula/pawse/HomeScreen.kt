@@ -1,5 +1,6 @@
 package uk.pixxula.pawse
 
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -26,7 +28,13 @@ import java.util.Date
 fun HomeScreen(
     session: SessionState,
     watcher: WatcherState,
+    nfc: Nfc,
+    /** Everything a session cannot start without and does not have. */
+    missing: Set<Missing>,
     openAccessibility: () -> Unit,
+    openAppInfo: () -> Unit,
+    allowBattery: () -> Unit,
+    openNfcSettings: () -> Unit,
     openBlockList: () -> Unit,
     openKeys: () -> Unit,
 ) {
@@ -78,40 +86,50 @@ fun HomeScreen(
                 }
             }
 
-            val noApps = session.blocked.isEmpty()
-            val noKeys = session.keys.isEmpty()
-            if (watcher != WatcherState.ON || noApps || noKeys) {
+            if (missing.isNotEmpty()) {
                 Card(Modifier.fillMaxWidth()) {
                     Column(
                         Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            stringResource(R.string.setup_title),
+                            stringResource(
+                                if (session.on) R.string.setup_title_on else R.string.setup_title,
+                            ),
                             style = MaterialTheme.typography.titleMedium,
                         )
-                        if (watcher != WatcherState.ON) {
-                            Text(
-                                stringResource(
-                                    if (watcher == WatcherState.OFF) R.string.setup_watcher_off
-                                    else R.string.setup_watcher_stopped,
-                                ),
+                        if (Missing.WATCHER in missing) {
+                            Item(
+                                if (watcher == WatcherState.STOPPED) R.string.setup_watcher_stopped
+                                else R.string.setup_watcher_off,
+                                R.string.setup_open_accessibility,
+                                openAccessibility,
                             )
-                            Button(onClick = openAccessibility) {
-                                Text(stringResource(R.string.setup_open_accessibility))
+                            if (watcher == WatcherState.OFF && restrictedSettingsApply) {
+                                Text(
+                                    stringResource(R.string.setup_restricted),
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                                TextButton(onClick = openAppInfo) {
+                                    Text(stringResource(R.string.setup_open_app_info))
+                                }
                             }
                         }
-                        if (noKeys) {
-                            Text(stringResource(R.string.setup_no_keys))
-                            Button(onClick = openKeys) {
-                                Text(stringResource(R.string.setup_add_key))
+                        if (Missing.BATTERY in missing) {
+                            Item(R.string.setup_battery, R.string.setup_allow_battery, allowBattery)
+                        }
+                        if (Missing.NFC in missing) {
+                            if (nfc == Nfc.ABSENT) {
+                                Text(stringResource(R.string.keys_no_nfc))
+                            } else {
+                                Item(R.string.setup_nfc_off, R.string.keys_open_nfc, openNfcSettings)
                             }
                         }
-                        if (noApps) {
-                            Text(stringResource(R.string.setup_no_apps))
-                            Button(onClick = openBlockList) {
-                                Text(stringResource(R.string.setup_choose_apps))
-                            }
+                        if (Missing.KEY in missing) {
+                            Item(R.string.setup_no_keys, R.string.setup_add_key, openKeys)
+                        }
+                        if (Missing.APPS in missing) {
+                            Item(R.string.setup_no_apps, R.string.setup_choose_apps, openBlockList)
                         }
                     }
                 }
@@ -127,3 +145,13 @@ fun HomeScreen(
         }
     }
 }
+
+/** One thing that is missing: what it is for, and the way to put it right. */
+@Composable
+private fun Item(explanation: Int, action: Int, onAction: () -> Unit) {
+    Text(stringResource(explanation))
+    Button(onClick = onAction) { Text(stringResource(action)) }
+}
+
+/** From Android 13 a sideloaded app is at first refused accessibility. */
+private val restrictedSettingsApply = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
