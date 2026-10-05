@@ -7,9 +7,22 @@ which is meant to live inside a plushie. Scan it to start, scan it to stop.
 10 what the phone has answered, and section 11 the order of work. Milestones 1
 to 5 are built: a tag starts and ends a session, a session covers the apps on
 the block list, hides their notifications and pauses their sound, and the home
-screen says what is missing before one can start. Releases are what is left.
+screen says what is missing before one can start.
+
+## Installing
+
+Signed builds are published as
+[releases](https://github.com/JandoBR/pawse/releases) by CI on every
+push that changes the app. Each one installs over the last. A build made with
+`assembleDebug` is signed with a different key and cannot be replaced by a
+release, or replace one: uninstall first when switching between them.
 
 ## Building
+
+Release builds are signed with Pawse's own key, which CI holds as repository
+secrets and `nixos-config` backs up with sops (`PAWSE_KEYSTORE_BASE64`,
+`PAWSE_KEYSTORE_PASSWORD`); see `docs/android-signing.md` in Dev-kit. Without
+the key in the environment, a release build falls back to the debug key.
 
 Everything runs inside the Nix shell, which provides the JDK and the Android
 SDK. Gradle is run through `nix-gradlew`, as explained in Dev-kit's

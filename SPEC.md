@@ -13,8 +13,7 @@ Started from the note in the vault (`Projects/Rust/Scrolly(App focus)/idea.md`):
 > apps, basically drawing a layer on top until the nfc tag gets scanned.
 
 The decisions that were open in the draft are settled and recorded in
-section 9. Milestones 1 to 5 are built (section 11); what is left is
-releases. What can only be found out on
+section 9. All six milestones are built (section 11). What can only be found out on
 the phone is listed in section 10, with what has been answered so far.
 
 ## 1. Overview
@@ -331,8 +330,9 @@ From HaBytes: `NfcScanActivity.kt` for reading tags, the tag-writing code
 behind `lib/platform/nfc.dart` rewritten in Kotlin, and `Store.kt` as the
 pattern for the native store.
 
-If the Flutter-less shell works out, it goes back into Dev-kit as an
-`android-native` template.
+The Flutter-less shell works, locally and on the runner. It can go back into
+Dev-kit as an `android-native` template: `flake.nix`, `nix-gradlew`, and the
+workflow in `.forgejo/workflows/android.yml`.
 
 ## 7. Permissions
 
@@ -510,7 +510,12 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
    not be pressed afterwards, so playing again mid-session did not arise.
    Not tried: a call in a blocked app. Notifications come back up to fifteen
    minutes after a session, which is accepted as it is.*
-6. **Releases** — the signing key and the workflow, from Dev-kit.
+6. **Releases** — the signing key and the workflow, from Dev-kit. *Built:
+   every push that touches the app is tested, built, signed and published as
+   a release on Forgejo, version `1.0.<run number>`. The key is Pawse's own
+   (`CN=Pawse`), backed up with sops in `nixos-config` as
+   `PAWSE_KEYSTORE_BASE64` and `PAWSE_KEYSTORE_PASSWORD`, and held by CI as
+   repository secrets; no copy needs to stay on a development machine.*
 
 ## 12. Later
 
