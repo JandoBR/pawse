@@ -199,8 +199,8 @@ The block list may contain any installed app that has a launcher icon, except:
 
 * Pawse itself, the launcher in use, and the dialer;
 * Settings, and any other system app that hosts the accessibility or app-info
-  pages (on MIUI, likely the Security app), so that the emergency exit in
-  section 4 always works;
+  pages, so that the emergency exit in section 4 always works. They are found
+  by asking Android which app handles those pages, not from a fixed list;
 * the default SMS app and the keyboard in use.
 
 These are worked out when the list is shown and again when a session starts,
@@ -365,7 +365,7 @@ Questions the settled draft left unanswered, decided the same day.
 ## 10. To find out on the phone
 
 Not decisions, but things only the device (MIUI) can answer. Milestone 1
-exists to answer the first three; the last five belong to milestones 4
+exists to answer the first three; the last four belong to milestones 4
 and 5.
 
 * Does the accessibility service stay alive through a day of normal use with
@@ -380,8 +380,6 @@ and 5.
 * Can the service tell being switched off from being killed and started again
   by MIUI? If not, a kill would end the session, and the rule in section 4
   needs another signal.
-* Which packages host the accessibility and app-info pages on MIUI, so that
-  they are kept off the block list?
 * Do snoozed notifications stay hidden through a long session, and do they
   sound or light the screen each time they are snoozed again?
 * Do WhatsApp and Telegram mark their call notifications with the call
@@ -389,6 +387,16 @@ and 5.
   apps need another signal.
 * What does MIUI report for a Dual Apps clone and for Second Space: the same
   package name, and does the service see their windows at all?
+
+Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb on
+4 October 2026:
+
+* The accessibility, notification-access and app-info pages are all in
+  `com.android.settings`, not in the Security app. The battery-saving
+  exemption page is in `com.miui.powerkeeper`, which has no launcher icon.
+* The launcher, dialer, SMS app and keyboard in use are all third-party or
+  Google apps here (Nova, Google Phone, Google Messages, FUTO Keyboard), so
+  each has to be looked up, never assumed to be the MIUI one.
 
 ## 11. Milestones
 
