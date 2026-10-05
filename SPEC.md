@@ -259,9 +259,10 @@ another language can be added later.
 
 | Part | Choice | Why |
 | --- | --- | --- |
-| Everything | Kotlin, native, in one Gradle module | The watcher, cover and tag handling must run with the app closed and are most of the code. |
-| The app's screens | Jetpack Compose | Three small screens. No Flutter, so no bridge between two languages and a much smaller APK. HaBytes' theme code is not shared. |
-| Session logic | Plain Kotlin with no Android classes | So it can be unit-tested on the JVM. |
+| Watcher, cover, Hush, session state, tag scans | Kotlin, native | They must run with the app closed, and Flutter cannot do any of them. As in HaBytes. This is most of the code. |
+| The app's screens | Flutter | Three small screens. The same split as HaBytes, so the template, the bridge pattern and the theme are already known. The price is a method channel between the two languages and a larger APK. |
+| Session logic | Plain Kotlin with no Android classes | So it can be unit-tested on the JVM. It lives on the native side because the service and the scan activity use it with no Flutter engine running. |
+| Bridge | One method channel | The screens ask the native side for the session, the block list, the keys, the installed apps and the state of the setup checklist, and tell it what to change. Dart holds no state of its own. |
 | Storage | App-private preferences, excluded from backups | A handful of values, read by the service and the screens alike. |
 | Min SDK | 26 | As in HaBytes. |
 | Package | `uk.pixxula.pawse` | |
@@ -269,25 +270,12 @@ another language can be added later.
 There is no server, so no Rust. The vault files this under Rust, but it is an
 Android project.
 
-Starting point, from Dev-kit. Its `flutter-android` template is used without
-Flutter:
+Starting point: the `flutter-android` template in Dev-kit as it is, with its
+Android notes, signing guide and workflow; `app = "pawse"`.
 
-* `flake.nix`: the same shell minus `pkgs.flutter`, the `flutter config` line
-  and the `web` shell; `app = "pawse"`. The NDK and CMake are not needed
-  without Flutter plugins.
-* `android/nix-gradlew`, at the root of the project, which here is the Gradle
-  project itself.
-* From `android-snippets.md`: `android.builder.sdkDownload=false`, the signing
-  block, and the unit-test dependency. The NDK workaround does not apply.
-* `docs/android-on-nixos.md`, `docs/android-signing.md` and
-  `ci/workflows/android.yml`, with Gradle commands in place of Flutter's.
-
-From HaBytes: `NfcScanActivity.kt` for reading tags, the tag-writing code
-behind `lib/platform/nfc.dart` rewritten in Kotlin, and `Store.kt` as the
-pattern for the native store.
-
-If the Flutter-less shell works out, it goes back into Dev-kit as an
-`android-native` template.
+From HaBytes: `NfcScanActivity.kt` for reading tags, `lib/platform/nfc.dart`
+for writing them, `Store.kt` and the method channel as the pattern for the
+native store and the bridge, and the theme.
 
 ## 7. Permissions
 
@@ -337,7 +325,7 @@ What was open in the draft, and how it was settled (4 October 2026).
 | Q3 | How strict? | Honest. No route around the app is closed. |
 | Q4 | An emergency exit? | Nothing built in. Switching the accessibility service off ends the session. |
 | Q5 | One block list, or several? | One. |
-| Q6 | Flutter or native for the screens? | Native Kotlin with Compose. |
+| Q6 | Flutter or native for the screens? | Flutter, as in HaBytes. First settled as Compose, then reversed the same day: the native parts are Kotlin either way, and Flutter is the one already known. |
 | Q7 | One tag, or one per app? | Any number of keys, all equal: each toggles the session. |
 | Q8 | Should it know about HaBytes? | No. Dropped, not deferred. |
 | Q9 | The name | Pawse. |
@@ -396,7 +384,8 @@ and 5.
    hard-coded package, the cover. Answers section 10 before anything else is
    built.
 2. **Session and block list** — the session logic with its tests, stored
-   state, the Block list screen, a temporary debug toggle. Survives a restart.
+   state, the method channel, the Block list screen, a temporary debug toggle.
+   Survives a restart.
 3. **Keys** — write and register a tag, scan to toggle, the Keys screen. The
    debug toggle is removed.
 4. **Home and setup** — session status, the checklist, the battery-saving
