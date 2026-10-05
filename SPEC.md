@@ -505,9 +505,11 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
    playback, letting calls through. *Built. Tried on the phone with YouTube:
    starting a session paused an ordinary video and hid its notification, and
    Gotify's notifications were hidden as they arrived. A floating YouTube
-   Short was not paused, as it reports no playback state; taking the sound
-   away was added for that and is not yet tried. Also not tried: a call in a
-   blocked app, and a notification coming back after a session.*
+   Short was not paused at first, as it reports no playback state; taking
+   the sound away was added for that, and stopped it. Its play button could
+   not be pressed afterwards, so playing again mid-session did not arise.
+   Not tried: a call in a blocked app. Notifications come back up to fifteen
+   minutes after a session, which is accepted as it is.*
 6. **Releases** — the signing key and the workflow, from Dev-kit.
 
 ## 12. Later
