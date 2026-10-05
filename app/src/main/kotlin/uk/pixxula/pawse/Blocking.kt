@@ -1,15 +1,20 @@
 package uk.pixxula.pawse
 
+/** An app with a window on screen. [floating] means picture-in-picture. */
+data class AppWindow(val app: String, val floating: Boolean)
+
 /** Decides what is covered. No Android classes, so it is tested on the JVM. */
 object Blocking {
     /** Milestone 1: hard-coded apps, blocked whenever the watcher is on. */
     val hardCoded: Set<String> = setOf("com.miui.calculator", "com.google.android.youtube")
 
     /**
-     * The blocked app to name on the cover, or null when none is on screen.
-     * [onScreen] is every app with a window showing, not only the focused one,
-     * so half of a split screen or a picture-in-picture window counts.
+     * The window to cover, or null when no blocked app is on screen.
+     * [onScreen] is every app window showing, not only the focused one. A
+     * blocked app in an ordinary window comes first, as it takes the whole
+     * screen; a floating one is covered only where it is, because nothing
+     * the cover offers can make it go away.
      */
-    fun blockedOnScreen(onScreen: Collection<String>, blocked: Set<String>): String? =
-        onScreen.firstOrNull { it in blocked }
+    fun toCover(onScreen: List<AppWindow>, blocked: Set<String>): AppWindow? =
+        onScreen.filter { it.app in blocked }.minByOrNull { it.floating }
 }

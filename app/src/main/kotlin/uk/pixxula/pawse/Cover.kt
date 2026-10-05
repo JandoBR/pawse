@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.os.Build
 import android.util.Log
@@ -24,10 +25,13 @@ import android.widget.TextView
 class Cover(private val service: AccessibilityService) {
     private val windowManager = service.getSystemService(WindowManager::class.java)
     private var view: View? = null
-    private var shownFor: String? = null
 
+    /** What the cover is over: the app, and where, when it only floats. */
+    private var shown: Pair<String, Rect?>? = null
+
+    /** Covers the whole screen, for a blocked app in an ordinary window. */
     fun show(blockedPackage: String) {
-        if (shownFor == blockedPackage) return
+        if (shown == blockedPackage to null) return
         hide()
 
         val layout = Layout(service).apply {
@@ -57,15 +61,54 @@ class Cover(private val service: AccessibilityService) {
 
         windowManager.addView(layout, params)
         view = layout
-        shownFor = blockedPackage
+        shown = blockedPackage to null
         Log.i(TAG, "cover up over $blockedPackage")
     }
 
+    /**
+     * Covers only a floating (picture-in-picture) window. Nothing here can
+     * close such a window, so covering the whole screen for it would leave no
+     * way back to the phone. Touches pass through, so it can still be dragged
+     * away; opening it up makes it an ordinary window, which is covered whole.
+     */
+    fun showOver(blockedPackage: String, bounds: Rect) {
+        if (shown == blockedPackage to bounds) return
+        val params = WindowManager.LayoutParams(
+            bounds.width(),
+            bounds.height(),
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            PixelFormat.OPAQUE,
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = bounds.left
+            y = bounds.top
+        }
+
+        val current = view
+        if (current != null && shown?.first == blockedPackage && shown?.second != null) {
+            // The same window, moved or resized.
+            windowManager.updateViewLayout(current, params)
+        } else {
+            hide()
+            val label = text(R.string.cover_title, 14f, bold = true).apply {
+                setBackgroundColor(BACKGROUND)
+            }
+            windowManager.addView(label, params)
+            view = label
+            Log.i(TAG, "cover up over floating $blockedPackage")
+        }
+        shown = blockedPackage to Rect(bounds)
+    }
+
     fun hide() {
-        val shown = view ?: return
-        windowManager.removeView(shown)
+        val current = view ?: return
+        windowManager.removeView(current)
         view = null
-        shownFor = null
+        shown = null
         Log.i(TAG, "cover down")
     }
 

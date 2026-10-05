@@ -115,9 +115,16 @@ An overlay window owned by the accessibility service
 dismissed with back or recents. If the overlay misbehaves on MIUI, the
 alternative is the app's own full-screen activity brought to the front.
 
-The cover always takes the whole screen, also when the blocked app is only
-half of a split screen or a picture-in-picture window. The app beside it is
-hidden too until the blocked one is closed.
+The cover takes the whole screen, also when the blocked app is only half of a
+split screen. The app beside it is hidden too until the blocked one is closed.
+
+A picture-in-picture window is the exception. Nothing the cover offers can
+close a floating window, so covering the whole screen for one would leave the
+phone unusable, with Settings and so the emergency exit out of reach. That is
+what happened when it was first tried. A floating blocked app gets a small
+cover of its own size, which follows it when it is moved. Touches pass through
+it, so the window can still be dragged away; opening it up makes it an
+ordinary window, which is covered whole.
 
 The cover shows the blocked app's name, how long the session has been on, how
 to end it, and a "Go home" button. It never offers a button that unlocks. It
@@ -356,7 +363,7 @@ Questions the settled draft left unanswered, decided the same day.
 | Q10 | Can Settings be blocked? | Never, nor whatever else hosts the pages of the emergency exit. |
 | Q11 | Calls in a blocked app? | Let through. The whole app is usable while it is ringing or in a call. |
 | Q12 | Notifications from blocked apps? | Hidden during a session and returned after it, by snoozing. Call notifications are exempt. |
-| Q13 | Split screen and picture-in-picture? | The whole screen is covered if any window on it is a blocked app's. |
+| Q13 | Split screen and picture-in-picture? | The whole screen is covered if any ordinary window on it is a blocked app's. First settled the same way for picture-in-picture, then changed on 5 October 2026 after it locked the phone: a floating window is covered only where it is. |
 | Q14 | The accessibility service is switched off mid-session? | The session ends. Switching it back on does not resume it. |
 | Q15 | A scan to start, from inside a blocked app? | Covered at once. |
 | Q16 | Audio from blocked apps? | Paused, for the whole session. |
@@ -379,7 +386,8 @@ and 5.
   the battery-saving exemption, and does it come back by itself after a
   restart? If not after a restart, add a boot receiver as in HaBytes.
 * Does the accessibility overlay cover reliably, including over split screen
-  and picture-in-picture, or is the activity cover needed?
+  and picture-in-picture, or is the activity cover needed? (Answered below,
+  except for split screen.)
 * Does force-stopping really switch the service off on MIUI, so that the
   emergency exit works as written?
 * Does the scan activity, started over another app, return to that app cleanly
@@ -407,8 +415,14 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 * The accessibility overlay covers the whole screen, status and navigation
   bars included, and takes the touches. It goes up when the app is opened
   from the launcher or from recents, cold or already running, and comes down
-  on "Go home", the back key and the home key. Split screen and
-  picture-in-picture are not tried yet.
+  on "Go home", the back key and the home key.
+* A picture-in-picture window is reported like any other, marked as such,
+  with its position. The small cover over it works (YouTube). A window that
+  has only just opened can be in the list before it can be asked which app it
+  is, so the watcher also goes by the event that announced it and looks again
+  a quarter of a second later.
+* Split screen could not be tried: on this phone it freezes regardless of
+  Pawse.
 * After a restart of the phone the service comes back by itself, with the app
   never opened, at the moment the phone is first unlocked: not before, as the
   app's storage is locked until then. No boot receiver is needed.
@@ -426,8 +440,7 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 1. **Block one app** — the project from Dev-kit, an accessibility service, a
    hard-coded package, the cover. Answers section 10 before anything else is
    built. *Built: the calculator and YouTube are covered whenever the service
-   is on. Left to try by hand: a day of normal use, split screen and
-   picture-in-picture.*
+   is on. Left to try: a day of normal use.*
 2. **Session and block list** — the session logic with its tests, stored
    state, the Block list screen, a temporary debug toggle. Survives a restart.
 3. **Keys** — write and register a tag, scan to toggle, the Keys screen. The

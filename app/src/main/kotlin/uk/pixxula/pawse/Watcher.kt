@@ -2,6 +2,9 @@ package uk.pixxula.pawse
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.graphics.Rect
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityWindowInfo
@@ -12,6 +15,10 @@ import android.view.accessibility.AccessibilityWindowInfo
  */
 class Watcher : AccessibilityService() {
     private lateinit var cover: Cover
+    private val handler = Handler(Looper.getMainLooper())
+    private val recheck = Runnable { check(null) }
+    private var rechecks = 0
+    private var lastSeen = ""
 
     override fun onServiceConnected() {
         Log.i(TAG, "connected")
@@ -21,6 +28,7 @@ class Watcher : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        rechecks = 0
         check(event)
     }
 
@@ -29,36 +37,65 @@ class Watcher : AccessibilityService() {
     override fun onUnbind(intent: Intent?): Boolean {
         Log.i(TAG, "unbound")
         running = false
+        handler.removeCallbacks(recheck)
         cover.hide()
         return super.onUnbind(intent)
     }
 
     private fun check(event: AccessibilityEvent?) {
-        var onScreen = appsOnScreen()
-        if (onScreen.isEmpty()) {
-            // The window list can come back empty in the middle of a
-            // transition. The event still names the app that is arriving; if
-            // there is none either, leave the cover as it is.
-            val arriving = event
-                ?.takeIf { it.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED }
-                ?.packageName?.toString()
-                ?: return
-            if (arriving == packageName) return
-            onScreen = listOf(arriving)
-        }
+        val arriving = event
+            ?.takeIf { it.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED }
+            ?.packageName?.toString()
+            ?.takeIf { it != packageName }
 
-        val blocked = Blocking.blockedOnScreen(onScreen, Blocking.hardCoded)
-        if (blocked != null) cover.show(blocked) else cover.hide()
+        val bounds = HashMap<AppWindow, Rect>()
+        var unnamed = false
+        for (window in windows) {
+            if (window.type != AccessibilityWindowInfo.TYPE_APPLICATION) continue
+            // A window that has not drawn yet has no content to ask for its
+            // app. The event that announced it names the app; failing that,
+            // look again shortly.
+            val app = window.root?.packageName?.toString() ?: arriving
+            if (app == null) {
+                unnamed = true
+                continue
+            }
+            val seen = AppWindow(app, floating = window.isInPictureInPictureMode)
+            bounds[seen] = Rect().also { window.getBoundsInScreen(it) }
+        }
+        log(bounds.keys, unnamed)
+
+        handler.removeCallbacks(recheck)
+        if (unnamed && rechecks < MAX_RECHECKS) {
+            rechecks++
+            handler.postDelayed(recheck, RECHECK_MILLIS)
+        }
+        // The window list can come back empty in the middle of a transition:
+        // leave the cover as it is until there is something to go by.
+        if (bounds.isEmpty()) return
+
+        val target = Blocking.toCover(bounds.keys.toList(), Blocking.hardCoded)
+        when {
+            target == null -> if (!unnamed) cover.hide()
+            target.floating -> cover.showOver(target.app, bounds.getValue(target))
+            else -> cover.show(target.app)
+        }
     }
 
-    /** The app behind every application window showing, whatever has focus. */
-    private fun appsOnScreen(): List<String> =
-        windows
-            .filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }
-            .mapNotNull { it.root?.packageName?.toString() }
+    /** Diagnostics for milestone 1: what is on screen, whenever it changes. */
+    private fun log(onScreen: Collection<AppWindow>, unnamed: Boolean) {
+        val seen = onScreen.joinToString { if (it.floating) "${it.app} (floating)" else it.app } +
+            if (unnamed) ", and one not yet named" else ""
+        if (seen != lastSeen) {
+            lastSeen = seen
+            Log.d(TAG, "on screen: $seen")
+        }
+    }
 
     companion object {
         private const val TAG = "Pawse"
+        private const val RECHECK_MILLIS = 250L
+        private const val MAX_RECHECKS = 8
 
         /**
          * Whether the service is connected in this process. Being switched on
