@@ -21,7 +21,7 @@ class Store private constructor(context: Context) {
             since = prefs.getLong(SINCE, 0),
             blocked = prefs.getStringSet(BLOCKED, emptySet())!!.toSet(),
             keys = readKeys(prefs.getString(KEYS, null)),
-            lastScan = prefs.getLong(LAST_SCAN, -1).takeIf { it >= 0 },
+            lastSwitch = prefs.getLong(LAST_SWITCH, -1).takeIf { it >= 0 },
         )
 
     /** Applies [change] to the stored state and gives back the result. */
@@ -63,7 +63,7 @@ class Store private constructor(context: Context) {
             .putLong(SINCE, state.since)
             .putStringSet(BLOCKED, state.blocked)
             .putString(KEYS, keys.toString())
-            .putLong(LAST_SCAN, state.lastScan ?: -1)
+            .putLong(LAST_SWITCH, state.lastSwitch ?: -1)
             // On disk before returning: a session must survive whatever
             // happens to the process next.
             .commit()
@@ -83,7 +83,7 @@ class Store private constructor(context: Context) {
         private const val SINCE = "since"
         private const val BLOCKED = "blocked"
         private const val KEYS = "keys"
-        private const val LAST_SCAN = "last_scan"
+        private const val LAST_SWITCH = "last_switch"
 
         @Volatile
         private var instance: Store? = null

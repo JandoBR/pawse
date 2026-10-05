@@ -145,7 +145,11 @@ service. It does nothing while the session is off.
   minutes. Nothing is dismissed.
 * **Audio**: playback by a blocked app is paused when the session starts and
   whenever one starts playing during it, through its media session, which the
-  notification listener gives access to.
+  notification listener gives access to. The media sessions are asked for
+  afresh when a session starts, as Android does not always announce a new
+  one. A video that is paused does not go into picture-in-picture when its
+  app is left, so during a session a blocked app has no floating window to
+  begin with, unless it was already floating when the session started.
 * **Calls**: a blocked app is *in a call* while it has a notification of the
   call category showing, which is how WhatsApp, Telegram and the like announce
   an incoming or ongoing call. While it is, that notification is not hidden,
@@ -182,12 +186,14 @@ the phone is against a plushie and may not be looked at.
 | A registered key | Starts the session, if setup is complete and the block list is not empty; otherwise opens the app at what is missing. | Ends the session. |
 | A `pawse://` tag that is not registered | Opens the Keys screen, offering to register it. | Ignored, with a message saying so. |
 
-Held against the phone, a tag is read again every few seconds. A scan within
-five seconds of the previous scan is ignored, measured with the monotonic
-clock, and counts as the previous scan itself: a tag left there switches the
-session once, however long it stays. It was three seconds from the last
-switch at first; on the phone the tag came round again after about three and
-a half.
+Held against the phone, a tag can be read twice in a row. A scan within three
+seconds of the last switch is ignored, measured with the monotonic clock.
+
+For a day this was five seconds from the previous scan, ignored ones included,
+so that a tag left against the phone would switch the session once however
+long it stayed. In use it did the opposite of help: scanning again a moment
+too early pushed the wait back each time, and it took five tries and twenty
+seconds to start a session. A tag held still was never seen to switch twice.
 
 ## 3. Sessions
 
@@ -336,7 +342,7 @@ releases, like HaBytes.
 
 * Kotlin unit tests for the session logic: a registered key toggles; an
   unknown one does not; a start is refused with an empty list or incomplete
-  setup; a scan inside five seconds of the last is ignored, so a tag left against the phone switches once; whether a given app is
+  setup; a second scan inside three seconds of a switch is ignored, and retrying early does not push the wait back; whether a given app is
   covered, including when it is in a call; which apps can never be on the
   list; keys and the list are locked while a session is on; a stored session
   with the service off is ended, and one after a restart is not; whether a
@@ -481,9 +487,12 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
    milestone 5.*
 5. **Hush** — the notification listener: hiding notifications, pausing
    playback, letting calls through. *Built. Tried on the phone with YouTube:
-   starting a session paused the video and hid its notification. Not tried
-   yet: a call in a blocked app, a notification coming back after a session,
-   and an app pressed to play again during one.*
+   starting a session paused the video and hid its notification. Once, with
+   the video floating before the scan, it was not paused; the cause was not
+   found, and the listener now asks for the media sessions afresh at every
+   start and logs what it sees (`adb logcat -s Pawse`, the line beginning
+   "hush on"). Not tried yet: a call in a blocked app, a notification coming
+   back after a session, and an app pressed to play again during one.*
 6. **Releases** — the signing key and the workflow, from Dev-kit.
 
 ## 12. Later

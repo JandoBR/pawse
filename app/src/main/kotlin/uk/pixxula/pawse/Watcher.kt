@@ -17,7 +17,14 @@ class Watcher : AccessibilityService() {
     private lateinit var cover: Cover
     private lateinit var store: Store
     private var protectedApps: Set<String> = emptySet()
-    private val stateChanged: () -> Unit = { handler.post { stateChanged() } }
+    private val stateChangedLater = Runnable { stateChanged() }
+
+    // One change to the session is several stored values changing, each
+    // announced by itself: they are answered once.
+    private val stateChanged: () -> Unit = {
+        handler.removeCallbacks(stateChangedLater)
+        handler.post(stateChangedLater)
+    }
     private val handler = Handler(Looper.getMainLooper())
     private val recheck = Runnable { check(null) }
     private var rechecks = 0

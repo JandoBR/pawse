@@ -25,7 +25,14 @@ class Hush : NotificationListenerService() {
     private val watched = HashMap<MediaController, MediaController.Callback>()
 
     private val handler = Handler(Looper.getMainLooper())
-    private val stateChanged: () -> Unit = { handler.post { apply() } }
+    private val applyLater = Runnable { apply() }
+
+    // One change to the session is several stored values changing, each
+    // announced by itself: they are answered once.
+    private val stateChanged: () -> Unit = {
+        handler.removeCallbacks(applyLater)
+        handler.post(applyLater)
+    }
     private val sessionsChanged =
         MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
             watch(controllers.orEmpty())
@@ -68,8 +75,18 @@ class Hush : NotificationListenerService() {
         blocked = Session.blockedNow(store.state, Device.protectedApps(this))
         refreshCalls()
         if (blocked.isEmpty()) return
-        for (notification in activeNotifications.orEmpty()) hide(notification)
-        for (controller in watched.keys) pauseIfBlocked(controller, controller.playbackState)
+        val showing = activeNotifications.orEmpty()
+        for (notification in showing) hide(notification)
+        // Asked for afresh, and not taken from what was last announced: a
+        // session that Android never announced would otherwise play on.
+        // Watching them pauses the ones that are playing.
+        val playing = sessions.getActiveSessions(ComponentName(this, Hush::class.java))
+        watch(playing)
+        Log.i(
+            TAG,
+            "hush on: ${showing.size} notifications showing, media sessions of " +
+                playing.joinToString { "${it.packageName}=${it.playbackState?.state}" },
+        )
     }
 
     private fun hide(notification: StatusBarNotification) {
@@ -106,7 +123,7 @@ class Hush : NotificationListenerService() {
     }
 
     private fun pauseIfBlocked(controller: MediaController, state: PlaybackState?) {
-        if (state?.state != PlaybackState.STATE_PLAYING) return
+        if (state?.state !in PLAYING) return
         if (!Quiet.pauses(controller.packageName, blocked, inCall)) return
         controller.transportControls.pause()
         Log.d(TAG, "paused ${controller.packageName}")
@@ -115,6 +132,13 @@ class Hush : NotificationListenerService() {
     companion object {
         private const val TAG = "Pawse"
         private const val SNOOZE_MILLIS = 15 * 60 * 1000L
+
+        /** Playing, or about to: an app that is still buffering gets no head start. */
+        private val PLAYING = setOf(
+            PlaybackState.STATE_PLAYING,
+            PlaybackState.STATE_BUFFERING,
+            PlaybackState.STATE_CONNECTING,
+        )
 
         /** The blocked apps that are in a call right now. */
         @Volatile
