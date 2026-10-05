@@ -13,7 +13,7 @@ Started from the note in the vault (`Projects/Rust/Scrolly(App focus)/idea.md`):
 > apps, basically drawing a layer on top until the nfc tag gets scanned.
 
 The decisions that were open in the draft are settled and recorded in
-section 9. Milestones 1 and 2 are built (section 11). What can only be found out on
+section 9. Milestones 1 to 3 are built (section 11). What can only be found out on
 the phone is listed in section 10, with what has been answered so far.
 
 ## 1. Overview
@@ -181,8 +181,12 @@ the phone is against a plushie and may not be looked at.
 | A registered key | Starts the session, if setup is complete and the block list is not empty; otherwise opens the app at what is missing. | Ends the session. |
 | A `pawse://` tag that is not registered | Opens the Keys screen, offering to register it. | Ignored, with a message saying so. |
 
-Held against the phone, a tag can be read twice in a row. A second scan within
-three seconds of a toggle is ignored, measured with the monotonic clock.
+Held against the phone, a tag is read again every few seconds. A scan within
+five seconds of the previous scan is ignored, measured with the monotonic
+clock, and counts as the previous scan itself: a tag left there switches the
+session once, however long it stays. It was three seconds from the last
+switch at first; on the phone the tag came round again after about three and
+a half.
 
 ## 3. Sessions
 
@@ -330,7 +334,7 @@ releases, like HaBytes.
 
 * Kotlin unit tests for the session logic: a registered key toggles; an
   unknown one does not; a start is refused with an empty list or incomplete
-  setup; a second scan inside three seconds is ignored; whether a given app is
+  setup; a scan inside five seconds of the last is ignored, so a tag left against the phone switches once; whether a given app is
   covered, including when it is in a call; which apps can never be on the
   list; keys and the list are locked while a session is on; a stored session
   with the service off is ended, and one after a restart is not; whether a
@@ -395,7 +399,7 @@ and 5.
 * Does force-stopping really switch the service off on MIUI, so that the
   emergency exit works as written?
 * Does the scan activity, started over another app, return to that app cleanly
-  when it finishes?
+  when it finishes? (Yes, and a scan is delivered while the cover is up.)
 * Can the service tell being switched off from being killed and started again
   by MIUI? If not, a kill would end the session, and the rule in section 4
   needs another signal.
@@ -456,7 +460,9 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
    after a restart, and switching the service off ends it for good. That last
    part was planned for milestone 4.*
 3. **Keys** — write and register a tag, scan to toggle, the Keys screen. The
-   debug toggle is removed.
+   debug toggle is removed. *Built and tried with a real tag: written and
+   registered from the Keys screen, then scanned to start and to end a
+   session, from the home screen and from behind the cover.*
 4. **Home and setup** — session status, the checklist, the battery-saving
    exemption, ending the session when the service is switched off.
 5. **Hush** — the notification listener: hiding notifications, pausing
@@ -467,6 +473,11 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 
 Only if using it shows the need; none of it is planned.
 
+* Making a blocked app's floating window go away, where now it is only
+  covered. Android gives no way to close another app's picture-in-picture
+  window; the routes are a gesture that drags it to the dismiss target, which
+  needs the service to be allowed to perform gestures, or pausing its
+  playback (milestone 5) and seeing whether the app then closes it.
 * A quick-settings tile or widget that shows whether a session is on.
 * A key per block list ("Work" on the desk, "Evening" by the bed).
 * Blocking websites in the browser.

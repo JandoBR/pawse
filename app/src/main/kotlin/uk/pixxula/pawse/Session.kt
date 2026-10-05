@@ -10,8 +10,8 @@ data class SessionState(
     val since: Long = 0,
     val blocked: Set<String> = emptySet(),
     val keys: List<Key> = emptyList(),
-    /** When the session was last switched, by the monotonic clock. */
-    val lastToggle: Long? = null,
+    /** When a key was last scanned, by the monotonic clock. */
+    val lastScan: Long? = null,
 )
 
 /** The time by both clocks: one to show, one to measure with. */
@@ -25,7 +25,7 @@ sealed interface Scan {
     data object Started : Scan
     data object Ended : Scan
 
-    /** Too soon after the last switch: the tag was read twice in a row. */
+    /** Too soon after the last scan: the tag is being read over and over. */
     data object TooSoon : Scan
 
     data class NotReady(val missing: Set<Missing>) : Scan
@@ -42,7 +42,7 @@ sealed interface Scan {
  * every function takes the state and gives back the new one.
  */
 object Session {
-    const val DEBOUNCE_MILLIS = 3_000L
+    const val DEBOUNCE_MILLIS = 5_000L
 
     /** A tag was scanned. [missing] is what the phone itself lacks. */
     fun scan(
@@ -54,20 +54,24 @@ object Session {
         if (state.keys.none { it.id == keyId }) {
             return state to if (state.on) Scan.Refused else Scan.Unregistered
         }
-        val last = state.lastToggle
+        val last = state.lastScan
+        val scanned = state.copy(lastScan = now.monotonic)
+        // A tag left against the phone is read again every few seconds. Each
+        // read that comes too soon also counts as the last one, so the
+        // session switches once however long the tag stays there.
         // The monotonic clock starts again when the phone does, so a stored
         // time that is ahead of now is from before a restart: not recent.
         if (last != null && now.monotonic >= last && now.monotonic - last < DEBOUNCE_MILLIS) {
-            return state to Scan.TooSoon
+            return scanned to Scan.TooSoon
         }
         if (state.on) {
-            return state.copy(on = false, lastToggle = now.monotonic) to Scan.Ended
+            return scanned.copy(on = false) to Scan.Ended
         }
 
         val lacking = missing(state, missing)
-        if (lacking.isNotEmpty()) return state to Scan.NotReady(lacking)
+        if (lacking.isNotEmpty()) return scanned to Scan.NotReady(lacking)
 
-        return state.copy(on = true, since = now.wall, lastToggle = now.monotonic) to Scan.Started
+        return scanned.copy(on = true, since = now.wall) to Scan.Started
     }
 
     /** Everything a start still lacks: what the phone lacks, and what is stored. */

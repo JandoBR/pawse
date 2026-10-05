@@ -83,12 +83,33 @@ class SessionTest {
     }
 
     @Test
-    fun aSecondScanWithinThreeSecondsIsIgnored() {
+    fun aSecondScanWithinFiveSecondsIsIgnored() {
         val on = started()
-        val (still, soon) = Session.scan(on, "abc", at(12), nothingMissing)
+        val (still, soon) = Session.scan(on, "abc", at(14), nothingMissing)
         assertEquals(Scan.TooSoon, soon)
         assertTrue(still.on)
-        assertEquals(Scan.Ended, Session.scan(on, "abc", at(13), nothingMissing).second)
+        assertEquals(Scan.Ended, Session.scan(on, "abc", at(15), nothingMissing).second)
+    }
+
+    @Test
+    fun aTagLeftAgainstThePhoneSwitchesOnce() {
+        // Read again every four seconds: each read is too soon after the last.
+        var state = started()
+        for (second in listOf(14L, 18L, 22L, 26L)) {
+            val (next, result) = Session.scan(state, "abc", at(second), nothingMissing)
+            assertEquals(Scan.TooSoon, result)
+            state = next
+        }
+        assertTrue(state.on)
+        // Taken away, and brought back later.
+        assertEquals(Scan.Ended, Session.scan(state, "abc", at(31), nothingMissing).second)
+    }
+
+    @Test
+    fun aRefusedStartStillCountsAsAScan() {
+        val noApps = ready.copy(blocked = emptySet())
+        val (state, _) = Session.scan(noApps, "abc", at(10), nothingMissing)
+        assertEquals(Scan.TooSoon, Session.scan(state, "abc", at(12), nothingMissing).second)
     }
 
     @Test

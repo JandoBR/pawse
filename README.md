@@ -5,8 +5,8 @@ which is meant to live inside a plushie. Scan it to start, scan it to stop.
 
 `SPEC.md` is the specification; its section 9 records the decisions, section
 10 what the phone has answered, and section 11 the order of work. Milestones 1
-and 2 are built: a session covers the apps on the block list. Tags come next,
-so for now a debug button on the home screen starts and ends a session.
+to 3 are built: a tag starts and ends a session, and a session covers the apps
+on the block list.
 
 ## Building
 
