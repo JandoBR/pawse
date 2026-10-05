@@ -35,6 +35,7 @@ fun HomeScreen(
     openAppInfo: () -> Unit,
     allowBattery: () -> Unit,
     openNfcSettings: () -> Unit,
+    openNotificationAccess: () -> Unit,
     openBlockList: () -> Unit,
     openKeys: () -> Unit,
 ) {
@@ -114,6 +115,13 @@ fun HomeScreen(
                                     Text(stringResource(R.string.setup_open_app_info))
                                 }
                             }
+                        }
+                        if (Missing.NOTIFICATIONS in missing) {
+                            Item(
+                                R.string.setup_notifications,
+                                R.string.setup_open_notifications,
+                                openNotificationAccess,
+                            )
                         }
                         if (Missing.BATTERY in missing) {
                             Item(R.string.setup_battery, R.string.setup_allow_battery, allowBattery)

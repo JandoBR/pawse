@@ -13,7 +13,8 @@ Started from the note in the vault (`Projects/Rust/Scrolly(App focus)/idea.md`):
 > apps, basically drawing a layer on top until the nfc tag gets scanned.
 
 The decisions that were open in the draft are settled and recorded in
-section 9. Milestones 1 to 4 are built (section 11). What can only be found out on
+section 9. Milestones 1 to 5 are built (section 11); what is left is
+releases. What can only be found out on
 the phone is listed in section 10, with what has been answered so far.
 
 ## 1. Overview
@@ -240,6 +241,7 @@ The app is **honest**: it closes none of the routes around itself.
 | Uninstall it | Gone. |
 | Restart the phone | Nothing: the session is stored and the watcher starts again. |
 | Use the blocked service in a browser | Out of scope. Add the browser to the block list if it matters. |
+| Send the scan from a computer or another app | A scan is an ordinary Android intent carrying the key's id, so anything that knows the id can send it without the tag: `adb`, or an app made for it. The id is only on the tag and in Pawse's private storage. |
 
 These are several screens deep, which is enough to stop the impulse. That is
 the problem being solved; a determined owner of the phone is not. Settings can
@@ -442,6 +444,9 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
   is what Android reports as exempt, so one check covers both. MIUI's
   separate "Autostart" switch cannot be read by an app; whether it matters is
   part of the day of normal use.
+* Notification access can be granted over `adb`, which also skips the
+  "restricted settings" step; granting it by hand on a sideloaded build is
+  still untried, as it is for the accessibility service.
 * Force-stopping does switch the service off: Android removes it from the
   enabled services, and blocking stops. The service is told nothing first, as
   section 4 assumes.
@@ -475,7 +480,10 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
    a scan with something missing opens it. Notification access joins it in
    milestone 5.*
 5. **Hush** — the notification listener: hiding notifications, pausing
-   playback, letting calls through.
+   playback, letting calls through. *Built. Tried on the phone with YouTube:
+   starting a session paused the video and hid its notification. Not tried
+   yet: a call in a blocked app, a notification coming back after a session,
+   and an app pressed to play again during one.*
 6. **Releases** — the signing key and the workflow, from Dev-kit.
 
 ## 12. Later

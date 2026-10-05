@@ -46,6 +46,43 @@ class BlockingTest {
     }
 
     @Test
+    fun anAppInACallIsNotCovered() {
+        val onScreen = listOf(full("app.blocked"))
+        assertNull(Blocking.toCover(onScreen, blocked, inCall = setOf("app.blocked")))
+        assertEquals(
+            full("app.blocked"),
+            Blocking.toCover(onScreen, blocked, inCall = setOf("app.other")),
+        )
+    }
+
+    @Test
+    fun notificationsFromBlockedAppsAreHiddenExceptCalls() {
+        assertEquals(true, Quiet.hides("app.blocked", "msg", blocked))
+        assertEquals(true, Quiet.hides("app.blocked", null, blocked))
+        assertEquals(false, Quiet.hides("app.blocked", "call", blocked))
+        assertEquals(false, Quiet.hides("app.free", "msg", blocked))
+        assertEquals(false, Quiet.hides("app.blocked", "msg", emptySet()))
+    }
+
+    @Test
+    fun aCallNotificationPutsABlockedAppInACall() {
+        val showing = listOf(
+            "app.blocked" to "call",
+            "app.other" to "msg",
+            "app.free" to "call",
+        )
+        assertEquals(setOf("app.blocked"), Quiet.inCall(showing, blocked))
+        assertEquals(emptySet<String>(), Quiet.inCall(showing, emptySet()))
+    }
+
+    @Test
+    fun playbackIsPausedExceptDuringACall() {
+        assertEquals(true, Quiet.pauses("app.blocked", blocked, emptySet()))
+        assertEquals(false, Quiet.pauses("app.blocked", blocked, setOf("app.blocked")))
+        assertEquals(false, Quiet.pauses("app.free", blocked, emptySet()))
+    }
+
+    @Test
     fun aFloatingFreeAppIsLeftAlone() {
         assertNull(Blocking.toCover(listOf(full("app.launcher"), floating("app.free")), blocked))
     }

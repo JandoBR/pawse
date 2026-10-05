@@ -78,6 +78,9 @@ class MainActivity : ComponentActivity() {
                             open(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, ownPackage())
                         },
                         openNfcSettings = { open(Settings.ACTION_NFC_SETTINGS) },
+                        openNotificationAccess = {
+                            open(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                        },
                         openBlockList = { screen = Screen.BLOCK_LIST },
                         openKeys = { screen = Screen.KEYS },
                     )

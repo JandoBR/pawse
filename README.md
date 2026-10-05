@@ -5,8 +5,9 @@ which is meant to live inside a plushie. Scan it to start, scan it to stop.
 
 `SPEC.md` is the specification; its section 9 records the decisions, section
 10 what the phone has answered, and section 11 the order of work. Milestones 1
-to 4 are built: a tag starts and ends a session, a session covers the apps on
-the block list, and the home screen says what is missing before one can start.
+to 5 are built: a tag starts and ends a session, a session covers the apps on
+the block list, hides their notifications and pauses their sound, and the home
+screen says what is missing before one can start. Releases are what is left.
 
 ## Building
 
@@ -21,7 +22,9 @@ nix develop
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Then switch Pawse on under Settings, Accessibility, Downloaded apps. On
+Then open Pawse and follow its checklist: the accessibility service,
+notification access and the battery-saving exemption. The first is under
+Settings, Accessibility, Downloaded apps. On
 Android 13 and later a sideloaded app is refused there at first: open its
 app-info page, and choose "Allow restricted settings" from the menu.
 

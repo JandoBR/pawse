@@ -29,6 +29,7 @@ class Watcher : AccessibilityService() {
         cover = Cover(this)
         store = Store.get(this)
         store.listen(stateChanged)
+        Hush.onCallsChanged = { handler.post { check(null) } }
         stateChanged()
     }
 
@@ -53,6 +54,7 @@ class Watcher : AccessibilityService() {
         running = false
         handler.removeCallbacks(recheck)
         store.unlisten(stateChanged)
+        Hush.onCallsChanged = null
         cover.hide()
         // Being switched off is the way out without the tag: it ends the
         // session, and switching back on does not resume it. Android also
@@ -102,7 +104,7 @@ class Watcher : AccessibilityService() {
         // leave the cover as it is until there is something to go by.
         if (bounds.isEmpty()) return
 
-        val target = Blocking.toCover(bounds.keys.toList(), blocked)
+        val target = Blocking.toCover(bounds.keys.toList(), blocked, Hush.inCall)
         when {
             target == null -> if (!unnamed) cover.hide()
             target.floating -> cover.showOver(target.app, bounds.getValue(target))

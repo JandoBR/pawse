@@ -18,7 +18,7 @@ data class SessionState(
 data class Now(val wall: Long, val monotonic: Long)
 
 /** What a session cannot start without. */
-enum class Missing { WATCHER, BATTERY, NFC, KEY, APPS }
+enum class Missing { WATCHER, NOTIFICATIONS, BATTERY, NFC, KEY, APPS }
 
 /** What came of a scan. */
 sealed interface Scan {

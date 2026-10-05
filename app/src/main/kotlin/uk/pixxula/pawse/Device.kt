@@ -43,6 +43,7 @@ object Device {
     /** What the phone lacks for a session to start. */
     fun missing(context: Context): Set<Missing> = buildSet {
         if (!watcherSwitchedOn(context) || !Watcher.running) add(Missing.WATCHER)
+        if (!Hush.switchedOn(context)) add(Missing.NOTIFICATIONS)
         if (!exemptFromBatterySaving(context)) add(Missing.BATTERY)
         if (nfc(context) != Nfc.ON) add(Missing.NFC)
     }
