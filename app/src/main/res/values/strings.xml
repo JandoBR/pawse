@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pawse</string>
+    <string name="watcher_description">Pawse uses this to know which app is on screen, so that it can cover the apps you chose to block. It reads which app owns each window and nothing inside it.</string>
+
+    <string name="cover_title">Pawsed</string>
+    <string name="cover_app">%1$s is blocked.</string>
+    <string name="cover_how">Boop your tag to end the session.</string>
+    <string name="cover_home">Go home</string>
+
+    <string name="home_watcher_on">The watcher is on.</string>
+    <string name="home_watcher_off">The watcher is off.</string>
+    <string name="home_watcher_stopped">The watcher is switched on but not running.</string>
+    <string name="home_watcher_restart">Nothing is being blocked. Switch Pawse off and on again in accessibility settings.</string>
+    <string name="home_watcher_why">Pawse needs its accessibility service to know which app is on screen.</string>
+    <string name="home_open_accessibility">Open accessibility settings</string>
+    <string name="home_milestone">Milestone 1: %1$s is always blocked while the watcher is on.</string>
+</resources>

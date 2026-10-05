@@ -1,0 +1,19 @@
+# Nix
+/result
+.direnv/
+
+# Gradle
+.gradle/
+build/
+/local.properties
+.kotlin/
+
+# Signing keys never belong here.
+*.keystore
+*.jks
+
+# Editors
+.idea/
+*.iml
+.vscode/
+.DS_Store

@@ -6,16 +6,15 @@ tags: []
 
 # Pawse — Specification
 
-Formerly "Scrolly", after the product the idea comes from. Started from the
-note in the vault (`Projects/Rust/Scrolly(App focus)/idea.md`):
+Started from the note in the vault (`Projects/Rust/Scrolly(App focus)/idea.md`):
 
 > Scrolly like App, basically lets you enter a focus mode where apps are locked
 > until you scan an nfc tag, which unlocks an app, it should block selected
 > apps, basically drawing a layer on top until the nfc tag gets scanned.
 
 The decisions that were open in the draft are settled and recorded in
-section 9. Nothing here is built yet. What can only be found out on the phone
-is listed in section 10.
+section 9. Milestone 1 is built (section 11). What can only be found out on
+the phone is listed in section 10, with what has been answered so far.
 
 ## 1. Overview
 
@@ -83,8 +82,9 @@ Four native parts, none of which needs the app's own screens to be open:
 ### Detecting the app in front
 
 An accessibility service. Android reports every window change
-(`TYPE_WINDOW_STATE_CHANGED`) with the package name, so the cover is up before
-the blocked app draws. It is granted by hand in Settings; on Android 13 and
+(`TYPE_WINDOW_STATE_CHANGED`) with the package name, so the cover is up almost
+at once: measured on the phone, about a tenth of a second after a blocked app
+first shows when it is started cold. It is granted by hand in Settings; on Android 13 and
 later a sideloaded app must first be allowed "restricted settings".
 
 What counts is every window on screen, not only the one with focus: the
@@ -95,6 +95,13 @@ The service runs whether or not a session is on, and does nothing when it is
 off. The system starts an enabled accessibility service again after a restart
 of the phone, so a running session resumes without the app being opened.
 Switching the service off is different: that ends the session (section 4).
+
+Switched on is not the same as running. If the service crashes, Android leaves
+it switched on in Settings but does not start it again until the phone
+restarts, the app is updated, or it is switched off and on by hand. Opening
+Pawse does not bring it back. So the service keeps a flag while it is
+connected, and Home says so when it is switched on but not running
+(section 5).
 
 If MIUI makes this impractical even with the app exempt from battery saving,
 the fallback is polling `UsageStatsManager` every half second from a
@@ -248,7 +255,7 @@ Small, and only needed between sessions:
 
 | Screen | Contents |
 | --- | --- |
-| Home | Whether a session is on, since when, and what it blocks. No button to start or end one: it says to scan the tag. The setup checklist if anything is missing: accessibility, notification access, exemption from battery saving, NFC switched on, at least one key, at least one blocked app. Each item says what it is for and opens the right Settings page or screen. |
+| Home | Whether a session is on, since when, and what it blocks. No button to start or end one: it says to scan the tag. The setup checklist if anything is missing: accessibility (also when it is switched on but not running, in which case it says to switch it off and on again), notification access, exemption from battery saving, NFC switched on, at least one key, at least one blocked app. Each item says what it is for and opens the right Settings page or screen. |
 | Block list | Installed apps with a switch each, with a search field. Apps that cannot be blocked (section 3) are not listed. Read-only during a session. |
 | Keys | Registered tags, with a name each; write a new one; register an existing `pawse://` tag; rename one; remove one. Disabled during a session. |
 
@@ -388,7 +395,7 @@ and 5.
 * What does MIUI report for a Dual Apps clone and for Second Space: the same
   package name, and does the service see their windows at all?
 
-Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb on
+Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 4 October 2026:
 
 * The accessibility, notification-access and app-info pages are all in
@@ -397,12 +404,27 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb on
 * The launcher, dialer, SMS app and keyboard in use are all third-party or
   Google apps here (Nova, Google Phone, Google Messages, FUTO Keyboard), so
   each has to be looked up, never assumed to be the MIUI one.
+* The accessibility overlay covers the whole screen, status and navigation
+  bars included, and takes the touches. It goes up when the app is opened
+  from the launcher or from recents, cold or already running, and comes down
+  on "Go home", the back key and the home key. Split screen and
+  picture-in-picture are not tried yet.
+* Force-stopping does switch the service off: Android removes it from the
+  enabled services, and blocking stops. The service is told nothing first, as
+  section 4 assumes.
+* A crash is different from both a force-stop and being switched off: the
+  service stays switched on but is not started again (section 2). Whether
+  MIUI killing the app to save battery behaves like that, or like an ordinary
+  kill that Android recovers from by itself, is still to be seen; it is what
+  the day of normal use is for.
 
 ## 11. Milestones
 
 1. **Block one app** — the project from Dev-kit, an accessibility service, a
    hard-coded package, the cover. Answers section 10 before anything else is
-   built.
+   built. *Built: the calculator is covered whenever the service is on. Left
+   to try by hand: a day of normal use, a restart of the phone, split screen
+   and picture-in-picture.*
 2. **Session and block list** — the session logic with its tests, stored
    state, the Block list screen, a temporary debug toggle. Survives a restart.
 3. **Keys** — write and register a tag, scan to toggle, the Keys screen. The

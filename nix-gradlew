@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Runs Gradle inside the Nix dev shell: the aapt2 Gradle would download cannot
+# run on NixOS, so it is given the one from the SDK, and the caches are kept
+# out of the project.
+#
+#   ./nix-gradlew :app:assembleDebug
+set -euo pipefail
+cd "$(dirname "$0")"
+
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/gradle-nix/$(basename "$PWD")"
+aapt2="$(ls -d "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -n 1)"
+
+exec ./gradlew \
+  --project-cache-dir="$cache/project" \
+  -Pkotlin.project.persistent.dir="$cache/kotlin" \
+  -Pandroid.aapt2FromMavenOverride="$aapt2" \
+  "$@"

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Window content is asked for only because Android gives the list of windows
+     on screen to no service without it. Pawse reads which app owns each
+     window and nothing inside it. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowsChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/watcher_description"
+    android:notificationTimeout="0"
+    android:settingsActivity="uk.pixxula.pawse.MainActivity" />
