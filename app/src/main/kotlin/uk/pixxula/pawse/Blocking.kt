@@ -2,8 +2,8 @@ package uk.pixxula.pawse
 
 /** Decides what is covered. No Android classes, so it is tested on the JVM. */
 object Blocking {
-    /** Milestone 1: one hard-coded app, blocked whenever the watcher is on. */
-    val hardCoded: Set<String> = setOf("com.miui.calculator")
+    /** Milestone 1: hard-coded apps, blocked whenever the watcher is on. */
+    val hardCoded: Set<String> = setOf("com.miui.calculator", "com.google.android.youtube")
 
     /**
      * The blocked app to name on the cover, or null when none is on screen.

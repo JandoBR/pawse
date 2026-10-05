@@ -409,6 +409,9 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
   from the launcher or from recents, cold or already running, and comes down
   on "Go home", the back key and the home key. Split screen and
   picture-in-picture are not tried yet.
+* After a restart of the phone the service comes back by itself, with the app
+  never opened, at the moment the phone is first unlocked: not before, as the
+  app's storage is locked until then. No boot receiver is needed.
 * Force-stopping does switch the service off: Android removes it from the
   enabled services, and blocking stops. The service is told nothing first, as
   section 4 assumes.
@@ -422,9 +425,9 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 
 1. **Block one app** — the project from Dev-kit, an accessibility service, a
    hard-coded package, the cover. Answers section 10 before anything else is
-   built. *Built: the calculator is covered whenever the service is on. Left
-   to try by hand: a day of normal use, a restart of the phone, split screen
-   and picture-in-picture.*
+   built. *Built: the calculator and YouTube are covered whenever the service
+   is on. Left to try by hand: a day of normal use, split screen and
+   picture-in-picture.*
 2. **Session and block list** — the session logic with its tests, stored
    state, the Block list screen, a temporary debug toggle. Survives a restart.
 3. **Keys** — write and register a tag, scan to toggle, the Keys screen. The
