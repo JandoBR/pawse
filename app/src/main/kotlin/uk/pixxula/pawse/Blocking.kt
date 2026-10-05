@@ -5,9 +5,6 @@ data class AppWindow(val app: String, val floating: Boolean)
 
 /** Decides what is covered. No Android classes, so it is tested on the JVM. */
 object Blocking {
-    /** Milestone 1: hard-coded apps, blocked whenever the watcher is on. */
-    val hardCoded: Set<String> = setOf("com.miui.calculator", "com.google.android.youtube")
-
     /**
      * The window to cover, or null when no blocked app is on screen.
      * [onScreen] is every app window showing, not only the focused one. A

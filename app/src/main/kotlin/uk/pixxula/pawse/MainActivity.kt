@@ -1,22 +1,15 @@
 package uk.pixxula.pawse
 
-import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -24,51 +17,12 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 
-class MainActivity : ComponentActivity() {
-    private var watcher by mutableStateOf(WatcherState.OFF)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            PawseTheme {
-                Home(
-                    watcher = watcher,
-                    openAccessibility = {
-                        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                    },
-                )
-            }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        watcher = when {
-            !isWatcherSwitchedOn() -> WatcherState.OFF
-            Watcher.running -> WatcherState.ON
-            else -> WatcherState.STOPPED
-        }
-    }
-
-    /** Whether the accessibility service is switched on in Settings. */
-    private fun isWatcherSwitchedOn(): Boolean {
-        val watcher = ComponentName(this, Watcher::class.java)
-        val enabled = Settings.Secure.getString(
-            contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-        ) ?: return false
-        return enabled.split(':').any { ComponentName.unflattenFromString(it) == watcher }
-    }
-}
-
-private enum class WatcherState {
+/** How the accessibility service stands. */
+enum class WatcherState {
     OFF,
     ON,
 
@@ -76,46 +30,76 @@ private enum class WatcherState {
     STOPPED,
 }
 
-@Composable
-private fun Home(watcher: WatcherState, openAccessibility: () -> Unit) {
-    Scaffold { insets ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(insets)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(
-                stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge,
-            )
-            Text(
-                stringResource(
-                    when (watcher) {
-                        WatcherState.ON -> R.string.home_watcher_on
-                        WatcherState.OFF -> R.string.home_watcher_off
-                        WatcherState.STOPPED -> R.string.home_watcher_stopped
-                    },
-                ),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            if (watcher != WatcherState.ON) {
-                Text(
-                    stringResource(
-                        if (watcher == WatcherState.OFF) R.string.home_watcher_why
-                        else R.string.home_watcher_restart,
-                    ),
-                )
-                Button(onClick = openAccessibility) {
-                    Text(stringResource(R.string.home_open_accessibility))
+private enum class Screen { HOME, BLOCK_LIST }
+
+class MainActivity : ComponentActivity() {
+    private lateinit var store: Store
+    private var session by mutableStateOf(SessionState())
+    private var watcher by mutableStateOf(WatcherState.OFF)
+    private val stateChanged: () -> Unit = { runOnUiThread { session = store.state } }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        store = Store.get(this)
+        session = store.state
+        enableEdgeToEdge()
+        setContent {
+            PawseTheme {
+                var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
+                BackHandler(enabled = screen != Screen.HOME) { screen = Screen.HOME }
+                when (screen) {
+                    Screen.HOME -> HomeScreen(
+                        session = session,
+                        watcher = watcher,
+                        openAccessibility = {
+                            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        },
+                        openBlockList = { screen = Screen.BLOCK_LIST },
+                        debugToggle = ::debugToggle,
+                    )
+                    Screen.BLOCK_LIST -> BlockListScreen(
+                        session = session,
+                        setBlocked = ::setBlocked,
+                        back = { screen = Screen.HOME },
+                    )
                 }
             }
-            Text(
-                stringResource(R.string.home_milestone, Blocking.hardCoded.joinToString()),
-                style = MaterialTheme.typography.bodySmall,
-            )
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        store.listen(stateChanged)
+    }
+
+    override fun onStop() {
+        store.unlisten(stateChanged)
+        super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val switchedOn = Device.watcherSwitchedOn(this)
+        watcher = when {
+            !switchedOn -> WatcherState.OFF
+            Watcher.running -> WatcherState.ON
+            else -> WatcherState.STOPPED
+        }
+        // A force-stop switches the service off without telling it, so a
+        // session can be stored as on with nothing behind it.
+        if (!switchedOn) store.update(Session::endBecauseWatcherIsOff)
+        session = store.state
+    }
+
+    private fun setBlocked(app: String, blocked: Boolean) {
+        val protected = Device.protectedApps(this)
+        store.update { Session.setBlocked(it, app, blocked, protected) }
+    }
+
+    /** Stands in for scanning a tag until tags exist. */
+    private fun debugToggle(): Scan {
+        val missing = Device.missing(this)
+        return store.updateWith { Session.toggle(it, Device.now(), missing, needsKey = false) }
     }
 }
 

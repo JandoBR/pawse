@@ -15,6 +15,9 @@ import android.view.accessibility.AccessibilityWindowInfo
  */
 class Watcher : AccessibilityService() {
     private lateinit var cover: Cover
+    private lateinit var store: Store
+    private var protectedApps: Set<String> = emptySet()
+    private val stateChanged: () -> Unit = { handler.post { stateChanged() } }
     private val handler = Handler(Looper.getMainLooper())
     private val recheck = Runnable { check(null) }
     private var rechecks = 0
@@ -24,6 +27,17 @@ class Watcher : AccessibilityService() {
         Log.i(TAG, "connected")
         running = true
         cover = Cover(this)
+        store = Store.get(this)
+        store.listen(stateChanged)
+        stateChanged()
+    }
+
+    /** The session or the block list changed: this decides what is covered. */
+    private fun stateChanged() {
+        if (!running) return
+        // Looked up again whenever a session may be starting, so that a new
+        // default launcher or SMS app is never left blocked.
+        protectedApps = Device.protectedApps(this)
         check(null)
     }
 
@@ -38,11 +52,25 @@ class Watcher : AccessibilityService() {
         Log.i(TAG, "unbound")
         running = false
         handler.removeCallbacks(recheck)
+        store.unlisten(stateChanged)
         cover.hide()
+        // Being switched off is the way out without the tag: it ends the
+        // session, and switching back on does not resume it. Android also
+        // unbinds services for a moment while a test tool drives the screen,
+        // with the service still switched on; that ends nothing.
+        if (!Device.watcherSwitchedOn(this)) store.update(Session::endBecauseWatcherIsOff)
         return super.onUnbind(intent)
     }
 
     private fun check(event: AccessibilityEvent?) {
+        val state = store.state
+        val blocked = Session.blockedNow(state, protectedApps)
+        if (blocked.isEmpty()) {
+            handler.removeCallbacks(recheck)
+            cover.hide()
+            return
+        }
+
         val arriving = event
             ?.takeIf { it.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED }
             ?.packageName?.toString()
@@ -74,15 +102,15 @@ class Watcher : AccessibilityService() {
         // leave the cover as it is until there is something to go by.
         if (bounds.isEmpty()) return
 
-        val target = Blocking.toCover(bounds.keys.toList(), Blocking.hardCoded)
+        val target = Blocking.toCover(bounds.keys.toList(), blocked)
         when {
             target == null -> if (!unnamed) cover.hide()
             target.floating -> cover.showOver(target.app, bounds.getValue(target))
-            else -> cover.show(target.app)
+            else -> cover.show(target.app, state.since)
         }
     }
 
-    /** Diagnostics for milestone 1: what is on screen, whenever it changes. */
+    /** Diagnostics: what is on screen during a session, whenever it changes. */
     private fun log(onScreen: Collection<AppWindow>, unnamed: Boolean) {
         val seen = onScreen.joinToString { if (it.floating) "${it.app} (floating)" else it.app } +
             if (unnamed) ", and one not yet named" else ""

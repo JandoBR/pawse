@@ -5,14 +5,44 @@
 
     <string name="cover_title">Pawsed</string>
     <string name="cover_app">%1$s is blocked.</string>
+    <string name="cover_since">The session has been on for %1$s.</string>
     <string name="cover_how">Boop your tag to end the session.</string>
     <string name="cover_home">Go home</string>
 
-    <string name="home_watcher_on">The watcher is on.</string>
-    <string name="home_watcher_off">The watcher is off.</string>
-    <string name="home_watcher_stopped">The watcher is switched on but not running.</string>
-    <string name="home_watcher_restart">Nothing is being blocked. Switch Pawse off and on again in accessibility settings.</string>
-    <string name="home_watcher_why">Pawse needs its accessibility service to know which app is on screen.</string>
-    <string name="home_open_accessibility">Open accessibility settings</string>
-    <string name="home_milestone">Milestone 1: always blocked while the watcher is on: %1$s.</string>
+    <string name="duration_under_a_minute">less than a minute</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_hours">%1$d h %2$d min</string>
+
+    <string name="home_on">Pawsed</string>
+    <string name="home_on_detail">Since %1$s. Scan your tag to end the session.</string>
+    <string name="home_off">Not pawsed</string>
+    <string name="home_off_detail">Scan your tag to start a session.</string>
+    <plurals name="home_blocking">
+        <item quantity="one">Blocking %1$d app: %2$s</item>
+        <item quantity="other">Blocking %1$d apps: %2$s</item>
+    </plurals>
+    <plurals name="home_would_block">
+        <item quantity="one">A session blocks %1$d app: %2$s</item>
+        <item quantity="other">A session blocks %1$d apps: %2$s</item>
+    </plurals>
+    <string name="home_block_list">Block list</string>
+
+    <string name="setup_title">Before a session can start</string>
+    <string name="setup_watcher_off">The watcher is off. Pawse needs its accessibility service to know which app is on screen.</string>
+    <string name="setup_watcher_stopped">The watcher is switched on but not running, so nothing is being blocked. Switch Pawse off and on again in accessibility settings.</string>
+    <string name="setup_open_accessibility">Open accessibility settings</string>
+    <string name="setup_no_apps">No apps are on the block list.</string>
+    <string name="setup_choose_apps">Choose apps</string>
+
+    <string name="debug_start">Debug: start a session</string>
+    <string name="debug_end">Debug: end the session</string>
+    <string name="debug_note">Stands in for the tag until milestone 3.</string>
+    <string name="scan_too_soon">Too soon after the last switch. Wait three seconds.</string>
+    <string name="scan_not_ready">A session cannot start yet: see above.</string>
+
+    <string name="back">Back</string>
+    <string name="list_search">Search apps</string>
+    <string name="list_locked">The block list cannot be changed during a session.</string>
+    <string name="list_loading">Loading apps…</string>
+    <string name="list_none">No apps match.</string>
 </resources>

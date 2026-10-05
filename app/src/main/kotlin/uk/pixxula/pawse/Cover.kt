@@ -30,13 +30,14 @@ class Cover(private val service: AccessibilityService) {
     private var shown: Pair<String, Rect?>? = null
 
     /** Covers the whole screen, for a blocked app in an ordinary window. */
-    fun show(blockedPackage: String) {
+    fun show(blockedPackage: String, since: Long) {
         if (shown == blockedPackage to null) return
         hide()
 
         val layout = Layout(service).apply {
             addView(text(R.string.cover_title, 34f, bold = true))
             addView(text(service.getString(R.string.cover_app, appName(blockedPackage)), 18f))
+            addView(text(service.getString(R.string.cover_since, elapsed(since)), 16f))
             addView(text(R.string.cover_how, 16f))
             addView(Button(service).apply {
                 setText(R.string.cover_home)
@@ -116,13 +117,17 @@ class Cover(private val service: AccessibilityService) {
         service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME)
     }
 
-    private fun appName(packageName: String): CharSequence =
-        try {
-            val packages = service.packageManager
-            packages.getApplicationLabel(packages.getApplicationInfo(packageName, 0))
-        } catch (e: Exception) {
-            packageName
+    private fun appName(packageName: String): String = Device.appName(service, packageName)
+
+    /** How long the session has been on, as of when the cover went up. */
+    private fun elapsed(since: Long): String {
+        val minutes = (System.currentTimeMillis() - since).coerceAtLeast(0) / 60_000
+        return when {
+            minutes < 1 -> service.getString(R.string.duration_under_a_minute)
+            minutes < 60 -> service.getString(R.string.duration_minutes, minutes)
+            else -> service.getString(R.string.duration_hours, minutes / 60, minutes % 60)
         }
+    }
 
     private fun text(resource: Int, size: Float, bold: Boolean = false): TextView =
         text(service.getString(resource), size, bold)
