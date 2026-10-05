@@ -13,7 +13,7 @@ Started from the note in the vault (`Projects/Rust/Scrolly(App focus)/idea.md`):
 > apps, basically drawing a layer on top until the nfc tag gets scanned.
 
 The decisions that were open in the draft are settled and recorded in
-section 9. Milestone 1 is built (section 11). What can only be found out on
+section 9. Milestones 1 and 2 are built (section 11). What can only be found out on
 the phone is listed in section 10, with what has been answered so far.
 
 ## 1. Overview
@@ -211,7 +211,8 @@ While it is on:
 
 The block list may contain any installed app that has a launcher icon, except:
 
-* Pawse itself, the launcher in use, and the dialer;
+* Pawse itself, every launcher (on MIUI the system launcher shows recents
+  even when another one is in use), and the dialer;
 * Settings, and any other system app that hosts the accessibility or app-info
   pages, so that the emergency exit in section 4 always works. They are found
   by asking Android which app handles those pages, not from a fixed list;
@@ -247,7 +248,10 @@ not resume it: the next session starts with a scan.
 
 The session is marked as ended at whichever of these comes first:
 
-* the service is told it is being switched off, and records it;
+* the service is told it is being switched off, and records it. It checks
+  that it really is switched off in Settings first: Android also unbinds
+  every accessibility service for a moment while a test tool
+  (`uiautomator`) reads the screen, and that must end nothing;
 * the service starts and finds a session stored as on that it was switched
   off during (not a restart of the phone, which leaves the session on);
 * the app is opened, or a tag is scanned, with a session stored as on and the
@@ -421,6 +425,9 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
   has only just opened can be in the list before it can be asked which app it
   is, so the watcher also goes by the event that announced it and looks again
   a quarter of a second later.
+* The small cover over a floating window lags behind it while it is dragged,
+  showing the video until the window settles: Android reports the new
+  position only then.
 * Split screen could not be tried: on this phone it freezes regardless of
   Pawse.
 * After a restart of the phone the service comes back by itself, with the app
@@ -440,9 +447,14 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 1. **Block one app** — the project from Dev-kit, an accessibility service, a
    hard-coded package, the cover. Answers section 10 before anything else is
    built. *Built: the calculator and YouTube are covered whenever the service
-   is on. Left to try: a day of normal use.*
+   is on. Left to try: a day of normal use. The hard-coded list went with
+   milestone 2.*
 2. **Session and block list** — the session logic with its tests, stored
    state, the Block list screen, a temporary debug toggle. Survives a restart.
+   *Built and checked on the phone: a session blocks what is on the list and
+   nothing else, the list is read-only meanwhile, the session is still on
+   after a restart, and switching the service off ends it for good. That last
+   part was planned for milestone 4.*
 3. **Keys** — write and register a tag, scan to toggle, the Keys screen. The
    debug toggle is removed.
 4. **Home and setup** — session status, the checklist, the battery-saving

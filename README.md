@@ -4,8 +4,9 @@ A focus mode for Android: chosen apps are covered until you scan an NFC tag,
 which is meant to live inside a plushie. Scan it to start, scan it to stop.
 
 `SPEC.md` is the specification; its section 9 records the decisions, section
-10 what the phone has answered, and section 11 the order of work. Milestone 1
-is built: an accessibility service that covers one hard-coded app.
+10 what the phone has answered, and section 11 the order of work. Milestones 1
+and 2 are built: a session covers the apps on the block list. Tags come next,
+so for now a debug button on the home screen starts and ends a session.
 
 ## Building
 
@@ -23,3 +24,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Then switch Pawse on under Settings, Accessibility, Downloaded apps. On
 Android 13 and later a sideloaded app is refused there at first: open its
 app-info page, and choose "Allow restricted settings" from the menu.
+
+Do not check the app with `uiautomator dump`: it unbinds every accessibility
+service on the phone while it runs, Pawse's included. Use screenshots, the
+log (`adb logcat -s Pawse`) and the stored state
+(`adb shell run-as uk.pixxula.pawse cat shared_prefs/session.xml`).
