@@ -220,6 +220,10 @@ class Hush : NotificationListenerService() {
             onCallsChanged?.invoke()
         }
 
+        /** Whether the listener is connected in this process, not merely allowed. */
+        val running: Boolean
+            get() = live != null
+
         /** Whether notification access is granted in Settings. */
         fun switchedOn(context: Context): Boolean {
             val hush = ComponentName(context, Hush::class.java)

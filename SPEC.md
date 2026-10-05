@@ -103,6 +103,22 @@ Pawse does not bring it back. So the service keeps a flag while it is
 connected, and Home says so when it is switched on but not running
 (section 5).
 
+On MIUI this is not rare. The "clear all" button in recents stops every app,
+Pawse included, and unless Pawse is allowed **Autostart** MIUI then refuses to
+let Android start its services again: the accessibility service is left as
+crashed and the notification listener unbound, with a session still stored as
+on and nothing blocked. With Autostart allowed, the same button does not stop
+Pawse at all. An app cannot read that switch, so Home points to it on a Xiaomi
+until told it is done. Three smaller things help:
+
+* Pawse's screen is kept out of recents, so it cannot be swiped away there.
+* The notification listener can be brought back: Android looks at a
+  package's services afresh when one of its components is switched off and
+  on, so Pawse does that to the listener when it is allowed but not running
+  (when the app is opened, a tag is scanned, or the watcher connects).
+* The accessibility service cannot be brought back that way; it was tried.
+  Only the switch in Settings, an update of the app, or a restart does it.
+
 If MIUI makes this impractical even with the app exempt from battery saving,
 the fallback is polling `UsageStatsManager` every half second from a
 foreground service (usage access plus "display over other apps"). It is a beat
@@ -260,6 +276,7 @@ The app is **honest**: it closes none of the routes around itself.
 | Switch off notification access | Notifications and audio come back, and calls in blocked apps are covered. The session stays on. |
 | Uninstall it | Gone. |
 | Restart the phone | Nothing: the session is stored and the watcher starts again. |
+| Clear recents on a Xiaomi that does not allow Pawse Autostart | Blocking stops, though the session is still stored as on, until the accessibility service is switched off and on. Home says so. |
 | Use the blocked service in a browser | Out of scope. Add the browser to the block list if it matters. |
 | Send the scan from a computer or another app | A scan is an ordinary Android intent carrying the key's id, so anything that knows the id can send it without the tag: `adb`, or an app made for it. The id is only on the tag and in Pawse's private storage. |
 
@@ -296,6 +313,16 @@ Small, and only needed between sessions:
 | Block list | Installed apps with a switch each, with a search field. Apps that cannot be blocked (section 3) are not listed. Read-only during a session. |
 | Keys | Registered tags, with a name each; write a new one; register an existing `pawse://` tag; rename one; remove one. Disabled during a session. |
 
+On a Xiaomi, Home also shows a tip to allow Autostart (section 2), with a
+button to the page and one to say it is done.
+
+The look is Pawse's own and the same on every phone: terracotta on cream by
+day and on dark brown by night, matching the launcher icon, which is a paw
+with a pause sign in its pad. Home leads with one large card that says
+whether a session is on, for how long, and shows the icons of the blocked
+apps; the cover uses the same paw and colours. The app is kept out of
+recents.
+
 The interface is in English only. The text lives in string resources, so
 another language can be added later.
 
@@ -308,7 +335,7 @@ another language can be added later.
 | Session logic | Plain Kotlin with no Android classes | So it can be unit-tested on the JVM. |
 | Storage | App-private preferences, excluded from backups | A handful of values, read by the service and the screens alike. |
 | Min SDK | 26 | As in HaBytes. |
-| Package | `uk.pixxula.pawse` | |
+| Package | `uk.pixxula.pawse`; debug builds are `uk.pixxula.pawse.debug` | A debug build is signed with another key and could not replace a release, so it installs beside it. |
 
 There is no server, so no Rust. The vault files this under Rust, but it is an
 Android project.
@@ -469,6 +496,14 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 * Notification access can be granted over `adb`, which also skips the
   "restricted settings" step; granting it by hand on a sideloaded build is
   still untried, as it is for the accessibility service.
+* MIUI's "clear all" in recents kills Pawse (`OneKeyClean` in the log) when
+  Autostart is not allowed, and the services do not come back; with
+  Autostart allowed the process is not killed at all. Being kept out of
+  recents does not protect against the button. This is the answer to whether
+  the service stays alive: only with Autostart.
+* Switching the notification listener's component off and on brings it back
+  in a second. The same does nothing for a crashed accessibility service, and
+  does not remove it from the enabled services either.
 * Force-stopping does switch the service off: Android removes it from the
   enabled services, and blocking stops. The service is told nothing first, as
   section 4 assumes.

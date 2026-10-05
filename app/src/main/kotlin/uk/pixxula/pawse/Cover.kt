@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.util.Log
 import android.util.TypedValue
@@ -13,7 +14,8 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -35,14 +37,12 @@ class Cover(private val service: AccessibilityService) {
         hide()
 
         val layout = Layout(service).apply {
-            addView(text(R.string.cover_title, 34f, bold = true))
-            addView(text(service.getString(R.string.cover_app, appName(blockedPackage)), 18f))
-            addView(text(service.getString(R.string.cover_since, elapsed(since)), 16f))
-            addView(text(R.string.cover_how, 16f))
-            addView(Button(service).apply {
-                setText(R.string.cover_home)
-                setOnClickListener { goHome() }
-            }, LinearLayout.LayoutParams(WRAP, WRAP).apply { topMargin = dp(32) })
+            addView(paw(dp(72), padding = dp(26), ring = true), sized(dp(124), bottom = dp(20)))
+            addView(text(R.string.cover_title, 38f, bold = true))
+            addView(blockedApp(blockedPackage), wrapped(top = dp(4)))
+            addView(text(service.getString(R.string.cover_since, elapsed(since)), 15f, SOFT))
+            addView(text(R.string.cover_how, 15f, SOFT))
+            addView(homeButton(), wrapped(top = dp(36)))
         }
 
         val params = WindowManager.LayoutParams(
@@ -95,11 +95,14 @@ class Cover(private val service: AccessibilityService) {
             windowManager.updateViewLayout(current, params)
         } else {
             hide()
-            val label = text(R.string.cover_title, 14f, bold = true).apply {
-                setBackgroundColor(BACKGROUND)
+            // Only the paw: a floating window is too small for words.
+            val patch = FrameLayout(service).apply {
+                background = gradient()
+                val size = dp(40)
+                addView(paw(size), FrameLayout.LayoutParams(size, size, Gravity.CENTER))
             }
-            windowManager.addView(label, params)
-            view = label
+            windowManager.addView(patch, params)
+            view = patch
             Log.i(TAG, "cover up over floating $blockedPackage")
         }
         shown = blockedPackage to Rect(bounds)
@@ -129,17 +132,82 @@ class Cover(private val service: AccessibilityService) {
         }
     }
 
-    private fun text(resource: Int, size: Float, bold: Boolean = false): TextView =
-        text(service.getString(resource), size, bold)
+    // The cover is drawn with views, in the colours of the launcher icon:
+    // a dark warm brown, with the paw and the words in cream.
 
-    private fun text(content: CharSequence, size: Float, bold: Boolean = false): TextView =
+    private fun gradient() = GradientDrawable(
+        GradientDrawable.Orientation.TOP_BOTTOM,
+        intArrayOf(BACKGROUND_TOP, BACKGROUND_BOTTOM),
+    )
+
+    /** The paw, alone or in a soft ring. */
+    private fun paw(size: Int, padding: Int = 0, ring: Boolean = false): ImageView =
+        ImageView(service).apply {
+            setImageResource(R.drawable.ic_paw)
+            setColorFilter(CREAM)
+            setPadding(padding, padding, padding, padding)
+            if (ring) {
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(RING)
+                }
+            }
+            minimumWidth = size
+            minimumHeight = size
+        }
+
+    /** The blocked app's own icon, beside the line saying it is blocked. */
+    private fun blockedApp(packageName: String): LinearLayout =
+        LinearLayout(service).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            try {
+                val icon = ImageView(service).apply {
+                    setImageDrawable(service.packageManager.getApplicationIcon(packageName))
+                }
+                addView(icon, LinearLayout.LayoutParams(dp(28), dp(28)).apply { marginEnd = dp(10) })
+            } catch (e: Exception) {
+                // No icon to show: the name says enough.
+            }
+            addView(text(service.getString(R.string.cover_app, appName(packageName)), 18f))
+        }
+
+    private fun homeButton(): TextView =
+        TextView(service).apply {
+            setText(R.string.cover_home)
+            setTextColor(BACKGROUND_BOTTOM)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(dp(32), dp(14), dp(32), dp(14))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(100).toFloat()
+                setColor(CREAM)
+            }
+            setOnClickListener { goHome() }
+        }
+
+    private fun sized(size: Int, bottom: Int = 0) =
+        LinearLayout.LayoutParams(size, size).apply { bottomMargin = bottom }
+
+    private fun wrapped(top: Int = 0) =
+        LinearLayout.LayoutParams(WRAP, WRAP).apply { topMargin = top }
+
+    private fun text(resource: Int, size: Float, color: Int = CREAM, bold: Boolean = false): TextView =
+        text(service.getString(resource), size, color, bold)
+
+    private fun text(
+        content: CharSequence,
+        size: Float,
+        color: Int = CREAM,
+        bold: Boolean = false,
+    ): TextView =
         TextView(service).apply {
             text = content
             gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
+            setTextColor(color)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, size)
             if (bold) setTypeface(typeface, Typeface.BOLD)
-            setPadding(0, dp(6), 0, dp(6))
+            setPadding(0, dp(5), 0, dp(5))
         }
 
     private fun dp(value: Int): Int =
@@ -150,7 +218,7 @@ class Cover(private val service: AccessibilityService) {
         init {
             orientation = VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(BACKGROUND)
+            background = gradient()
             setPadding(dp(32), dp(32), dp(32), dp(32))
         }
 
@@ -166,6 +234,10 @@ class Cover(private val service: AccessibilityService) {
     private companion object {
         const val TAG = "Pawse"
         const val WRAP = LinearLayout.LayoutParams.WRAP_CONTENT
-        val BACKGROUND = Color.rgb(0x2B, 0x21, 0x1E)
+        val BACKGROUND_TOP = Color.rgb(0x4A, 0x24, 0x1A)
+        val BACKGROUND_BOTTOM = Color.rgb(0x1A, 0x11, 0x0F)
+        val CREAM = Color.rgb(0xFF, 0xF6, 0xEC)
+        val SOFT = Color.argb(0xB8, 0xFF, 0xF6, 0xEC)
+        val RING = Color.argb(0x24, 0xFF, 0xF6, 0xEC)
     }
 }

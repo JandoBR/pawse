@@ -42,6 +42,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Its own app, so that it installs beside a release and never
+            // has to replace one, which a differently signed build cannot.
+            applicationIdSuffix = ".debug"
+        }
         release {
             signingConfig =
                 signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")

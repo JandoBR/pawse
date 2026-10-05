@@ -40,10 +40,26 @@ object Device {
         false -> Nfc.OFF
     }
 
+    /**
+     * The page with Xiaomi's "Autostart" switches, or null on a phone that is
+     * not a Xiaomi. Without that switch MIUI stops Pawse when recents is
+     * cleared and does not let it start again. An app cannot read the switch,
+     * only show the way to it.
+     */
+    fun autostartPage(context: Context): Intent? {
+        val page = Intent().setComponent(
+            ComponentName(
+                "com.miui.securitycenter",
+                "com.miui.permcenter.autostart.AutoStartManagementActivity",
+            ),
+        )
+        return page.takeIf { context.packageManager.resolveActivity(it, 0) != null }
+    }
+
     /** What the phone lacks for a session to start. */
     fun missing(context: Context): Set<Missing> = buildSet {
         if (!watcherSwitchedOn(context) || !Watcher.running) add(Missing.WATCHER)
-        if (!Hush.switchedOn(context)) add(Missing.NOTIFICATIONS)
+        if (!Hush.switchedOn(context) || !Hush.running) add(Missing.NOTIFICATIONS)
         if (!exemptFromBatterySaving(context)) add(Missing.BATTERY)
         if (nfc(context) != Nfc.ON) add(Missing.NFC)
     }

@@ -14,31 +14,53 @@
     <string name="duration_hours">%1$d h %2$d min</string>
 
     <string name="home_on">Pawsed</string>
-    <string name="home_on_detail">Since %1$s. Scan your tag to end the session.</string>
+    <string name="home_on_detail">For %1$s, since %2$s.</string>
+    <string name="home_on_how">Boop your tag to end the session.</string>
     <string name="home_off">Not pawsed</string>
-    <string name="home_off_detail">Scan your tag to start a session.</string>
-    <plurals name="home_blocking">
-        <item quantity="one">Blocking %1$d app: %2$s</item>
-        <item quantity="other">Blocking %1$d apps: %2$s</item>
+    <string name="home_off_detail">Boop your tag to start a session.</string>
+    <string name="home_off_not_ready">A few things are needed before a session can start.</string>
+    <string name="home_more">+%1$d more</string>
+    <plurals name="home_blocked">
+        <item quantity="one">blocked</item>
+        <item quantity="other">blocked</item>
     </plurals>
-    <plurals name="home_would_block">
-        <item quantity="one">A session blocks %1$d app: %2$s</item>
-        <item quantity="other">A session blocks %1$d apps: %2$s</item>
+    <plurals name="home_to_block">
+        <item quantity="one">will be blocked</item>
+        <item quantity="other">will be blocked</item>
+    </plurals>
+    <plurals name="home_apps">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+    <plurals name="home_keys">
+        <item quantity="one">%1$d key</item>
+        <item quantity="other">%1$d keys</item>
     </plurals>
     <string name="home_block_list">Block list</string>
 
     <string name="setup_title">Before a session can start</string>
     <string name="setup_title_on">Needs attention</string>
+    <string name="setup_watcher_title">Accessibility service</string>
+    <string name="setup_notifications_title">Notification access</string>
+    <string name="setup_battery_title">Battery saving</string>
+    <string name="setup_nfc_title">NFC</string>
+    <string name="setup_keys_title">A key</string>
+    <string name="setup_apps_title">Apps to block</string>
     <string name="setup_watcher_off">The watcher is off. Pawse needs its accessibility service to know which app is on screen.</string>
-    <string name="setup_watcher_stopped">The watcher is switched on but not running, so nothing is being blocked. Switch Pawse off and on again in accessibility settings.</string>
+    <string name="setup_watcher_stopped">The watcher is switched on but not running, so nothing is being blocked. The phone stopped Pawse and Android will not start the service again by itself. Switch Pawse off and on again in accessibility settings. On a Xiaomi, allowing Autostart for Pawse keeps this from happening.</string>
     <string name="setup_open_accessibility">Open accessibility settings</string>
     <string name="setup_restricted">If Android says the setting is restricted: open Pawse’s app info, tap the three dots at the top, and choose “Allow restricted settings”. Then try again.</string>
     <string name="setup_open_app_info">Open app info</string>
+    <string name="setup_notifications_stopped">Notification access is granted but the listener is not running, so sound is not paused and notifications are not hidden. Pawse has asked Android to start it again; if this stays, switch notification access off and on.</string>
     <string name="setup_notifications">Pawse has no notification access. It needs it to hide blocked apps’ notifications, pause their sound, and let their calls through. It reads which app a notification is from and whether it is a call, and nothing else.</string>
     <string name="setup_open_notifications">Open notification access</string>
     <string name="setup_battery">The phone may stop Pawse to save battery, and blocking would stop with it. On the page that opens, choose “No restrictions” or “Allow”.</string>
     <string name="setup_allow_battery">Exempt Pawse from battery saving</string>
     <string name="setup_nfc_off">NFC is switched off, so a tag cannot be read.</string>
+    <string name="autostart_title">Allow Autostart</string>
+    <string name="autostart_why">Xiaomi phones stop apps when recents is cleared, and without Autostart they do not let them start again. Blocking would stop until you switched the accessibility service off and on. Find Pawse in the list and switch it on. Pawse cannot see whether it is, so tell it when you have.</string>
+    <string name="autostart_open">Open Autostart</string>
+    <string name="autostart_done">I have done this</string>
     <string name="setup_no_keys">No key is registered. A key is an NFC tag that starts and ends a session.</string>
     <string name="setup_add_key">Add a key</string>
     <string name="setup_no_apps">No apps are on the block list.</string>
@@ -52,6 +74,7 @@
     <string name="cancel">Cancel</string>
     <string name="back">Back</string>
     <string name="list_search">Search apps</string>
+    <string name="list_how">Switch on the apps a session should cover.</string>
     <string name="list_locked">The block list cannot be changed during a session.</string>
     <string name="list_loading">Loading apps…</string>
     <string name="list_none">No apps match.</string>

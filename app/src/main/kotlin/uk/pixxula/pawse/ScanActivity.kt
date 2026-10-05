@@ -26,6 +26,7 @@ class ScanActivity : Activity() {
         // session can be stored as on with nothing behind it.
         if (!Device.watcherSwitchedOn(this)) store.update(Session::endBecauseWatcherIsOff)
 
+        Revive.ifStopped(this)
         val missing = Device.missing(this)
         val result = store.updateWith { Session.scan(it, keyId, Device.now(), missing) }
         Log.i(TAG, "scan: $result")

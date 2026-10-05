@@ -6,24 +6,15 @@ import android.content.Intent
 import android.net.Uri
 import android.nfc.NfcAdapter
 import android.nfc.Tag
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 
 /** How the accessibility service stands. */
 enum class WatcherState {
@@ -47,6 +38,10 @@ class MainActivity : ComponentActivity() {
     private var watcher by mutableStateOf(WatcherState.OFF)
     private var nfc by mutableStateOf(Nfc.ABSENT)
     private var phoneMissing by mutableStateOf(emptySet<Missing>())
+
+    /** Whether to still point at Xiaomi's Autostart switch, which cannot be read. */
+    private var autostartTip by mutableStateOf(false)
+    private val setup by lazy { getSharedPreferences("setup", MODE_PRIVATE) }
     private var keysPrompt by mutableStateOf<KeysPrompt?>(null)
 
     private var listening = false
@@ -69,6 +64,15 @@ class MainActivity : ComponentActivity() {
                         session = session,
                         watcher = watcher,
                         nfc = nfc,
+                        notificationAccess = Hush.switchedOn(this),
+                        autostartTip = autostartTip,
+                        openAutostart = {
+                            Device.autostartPage(this)?.let(::startActivity)
+                        },
+                        autostartDone = {
+                            setup.edit().putBoolean(AUTOSTART_DONE, true).apply()
+                            autostartTip = false
+                        },
                         missing = Session.missing(session, phoneMissing),
                         openAccessibility = { open(Settings.ACTION_ACCESSIBILITY_SETTINGS) },
                         openAppInfo = {
@@ -139,12 +143,26 @@ class MainActivity : ComponentActivity() {
             else -> WatcherState.STOPPED
         }
         nfc = Device.nfc(this)
+        Revive.ifStopped(this)
+        autostartTip = Device.autostartPage(this) != null &&
+            !setup.getBoolean(AUTOSTART_DONE, false)
         phoneMissing = Device.missing(this)
+        // A service that was asked back takes a moment to connect: look again.
+        window.decorView.postDelayed({ if (resumed) refreshServices() }, 2_500)
         // A force-stop switches the service off without telling it, so a
         // session can be stored as on with nothing behind it.
         if (!switchedOn) store.update(Session::endBecauseWatcherIsOff)
         session = store.state
         applyListening()
+    }
+
+    private fun refreshServices() {
+        watcher = when {
+            !Device.watcherSwitchedOn(this) -> WatcherState.OFF
+            Watcher.running -> WatcherState.ON
+            else -> WatcherState.STOPPED
+        }
+        phoneMissing = Device.missing(this)
     }
 
     override fun onPause() {
@@ -218,6 +236,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         private const val EXTRA_REGISTER_KEY = "register_key"
+        private const val AUTOSTART_DONE = "autostart_done"
 
         /** Opens the app; with [registerKey], at the offer to register that tag. */
         fun intent(context: Context, registerKey: String? = null): Intent =
@@ -225,17 +244,4 @@ class MainActivity : ComponentActivity() {
                 if (registerKey != null) putExtra(EXTRA_REGISTER_KEY, registerKey)
             }
     }
-}
-
-@Composable
-private fun PawseTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
-    val context = LocalContext.current
-    val colors = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        dark -> darkColorScheme()
-        else -> lightColorScheme()
-    }
-    MaterialTheme(colorScheme = colors, content = content)
 }

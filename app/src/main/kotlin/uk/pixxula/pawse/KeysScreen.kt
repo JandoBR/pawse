@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -24,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
@@ -69,12 +72,9 @@ fun KeysScreen(
                 .padding(insets)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = back) { Text(stringResource(R.string.back)) }
-                Text(stringResource(R.string.keys_title), style = MaterialTheme.typography.titleLarge)
-            }
+            TopBar(stringResource(R.string.keys_title), back)
             Column(
-                Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 when {
@@ -89,17 +89,51 @@ fun KeysScreen(
                             Text(stringResource(R.string.keys_open_nfc))
                         }
                     }
-                    else -> Text(stringResource(R.string.keys_how))
+                    else -> Text(
+                        stringResource(R.string.keys_how),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
 
-                if (session.keys.isEmpty()) Text(stringResource(R.string.keys_none))
+                if (session.keys.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Paw(size = 72.dp, tint = MaterialTheme.colorScheme.outlineVariant)
+                        Text(
+                            stringResource(R.string.keys_none),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 for (key in session.keys) {
-                    Card(Modifier.fillMaxWidth()) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
                         Row(
-                            Modifier.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                            Modifier.padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(key.name, modifier = Modifier.weight(1f))
+                            Icon(
+                                painter = painterResource(R.drawable.ic_tag),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .padding(end = 14.dp)
+                                    .size(26.dp),
+                            )
+                            Text(
+                                key.name,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
                             TextButton(
                                 onClick = { setPrompt(KeysPrompt.Rename(key)) },
                                 enabled = !session.on,

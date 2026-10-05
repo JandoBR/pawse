@@ -1,26 +1,20 @@
 package uk.pixxula.pawse
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,8 +23,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -56,28 +48,23 @@ fun BlockListScreen(
                 .fillMaxSize()
                 .padding(insets),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = back) { Text(stringResource(R.string.back)) }
-                Text(
-                    stringResource(R.string.home_block_list),
-                    style = MaterialTheme.typography.titleLarge,
-                )
-            }
-            if (session.on) {
-                Text(
-                    stringResource(R.string.list_locked),
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
+            TopBar(stringResource(R.string.home_block_list), back)
+            Text(
+                stringResource(if (session.on) R.string.list_locked else R.string.list_how),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (session.on) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             OutlinedTextField(
                 value = search,
                 onValueChange = { search = it },
                 label = { Text(stringResource(R.string.list_search)) },
                 singleLine = true,
+                shape = CircleShape,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
             )
 
             val all = apps
@@ -120,33 +107,9 @@ private fun AppRow(app: App, blocked: Boolean, enabled: Boolean, setBlocked: (Bo
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        AppIcon(app.packageName)
+        AppIcon(app.packageName, size = 40.dp)
         Text(app.name, modifier = Modifier.weight(1f))
         // The row is what is pressed; the switch only shows the state.
         Switch(checked = blocked, onCheckedChange = null, enabled = enabled)
     }
 }
-
-@Composable
-private fun AppIcon(packageName: String) {
-    val context = LocalContext.current
-    val icon by produceState<ImageBitmap?>(initialValue = null, packageName) {
-        value = withContext(Dispatchers.IO) { loadIcon(context, packageName) }
-    }
-    Box(Modifier.size(40.dp)) {
-        icon?.let { Image(bitmap = it, contentDescription = null, modifier = Modifier.fillMaxSize()) }
-    }
-}
-
-private fun loadIcon(context: Context, packageName: String): ImageBitmap? =
-    try {
-        val drawable = context.packageManager.getApplicationIcon(packageName)
-        val bitmap = Bitmap.createBitmap(ICON_PIXELS, ICON_PIXELS, Bitmap.Config.ARGB_8888)
-        drawable.setBounds(0, 0, ICON_PIXELS, ICON_PIXELS)
-        drawable.draw(Canvas(bitmap))
-        bitmap.asImageBitmap()
-    } catch (e: Exception) {
-        null
-    }
-
-private const val ICON_PIXELS = 96

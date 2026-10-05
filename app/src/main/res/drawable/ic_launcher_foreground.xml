@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- The big pad, with a pause sign cut out of it. -->
+    <path
+        android:fillColor="#FFF6EC"
+        android:fillType="evenOdd"
+        android:pathData="M54,47 C65,47 74,57 74,66 C74,75 66,79 60,77 C57,76 55.5,75 54,75 C52.5,75 51,76 48,77 C42,79 34,75 34,66 C34,57 43,47 54,47 Z M49.6,53.5 h1.2 a1.2,1.2 0 0 1 1.2,1.2 v14.6 a1.2,1.2 0 0 1 -1.2,1.2 h-1.2 a1.2,1.2 0 0 1 -1.2,-1.2 v-14.6 a1.2,1.2 0 0 1 1.2,-1.2 Z M57.2,53.5 h1.2 a1.2,1.2 0 0 1 1.2,1.2 v14.6 a1.2,1.2 0 0 1 -1.2,1.2 h-1.2 a1.2,1.2 0 0 1 -1.2,-1.2 v-14.6 a1.2,1.2 0 0 1 1.2,-1.2 Z" />
+    <group
+        android:pivotX="33"
+        android:pivotY="49"
+        android:rotation="-20">
+        <path
+            android:fillColor="#FFF6EC"
+            android:pathData="M27,49 a6,7.5 0 1,0 12,0 a6,7.5 0 1,0 -12,0 Z" />
+    </group>
+    <group
+        android:pivotX="45"
+        android:pivotY="36"
+        android:rotation="-8">
+        <path
+            android:fillColor="#FFF6EC"
+            android:pathData="M38.5,36 a6.5,8 0 1,0 13.0,0 a6.5,8 0 1,0 -13.0,0 Z" />
+    </group>
+    <group
+        android:pivotX="63"
+        android:pivotY="36"
+        android:rotation="8">
+        <path
+            android:fillColor="#FFF6EC"
+            android:pathData="M56.5,36 a6.5,8 0 1,0 13.0,0 a6.5,8 0 1,0 -13.0,0 Z" />
+    </group>
+    <group
+        android:pivotX="75"
+        android:pivotY="49"
+        android:rotation="20">
+        <path
+            android:fillColor="#FFF6EC"
+            android:pathData="M69,49 a6,7.5 0 1,0 12,0 a6,7.5 0 1,0 -12,0 Z" />
+    </group>
+</vector>

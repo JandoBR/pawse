@@ -14,8 +14,12 @@ screen says what is missing before one can start.
 Signed builds are published as
 [releases](https://github.com/JandoBR/pawse/releases) by CI on every
 push that changes the app. Each one installs over the last. A build made with
-`assembleDebug` is signed with a different key and cannot be replaced by a
-release, or replace one: uninstall first when switching between them.
+`assembleDebug` is a separate app, "Pawse debug" (`uk.pixxula.pawse.debug`),
+which installs beside a release and has its own settings and services.
+
+On a Xiaomi phone, allow Pawse **Autostart** (Security, Permissions,
+Autostart). Without it, clearing recents stops Pawse and MIUI will not let its
+services start again until the accessibility service is switched off and on.
 
 ## Building
 

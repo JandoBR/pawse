@@ -37,6 +37,7 @@ class Watcher : AccessibilityService() {
         store = Store.get(this)
         store.listen(stateChanged)
         Hush.onCallsChanged = { handler.post { check(null) } }
+        handler.postDelayed({ Revive.ifStopped(this) }, 3_000)
         stateChanged()
     }
 
