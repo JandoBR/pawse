@@ -357,9 +357,10 @@ From HaBytes: `NfcScanActivity.kt` for reading tags, the tag-writing code
 behind `lib/platform/nfc.dart` rewritten in Kotlin, and `Store.kt` as the
 pattern for the native store.
 
-The Flutter-less shell works, locally and on the runner. It can go back into
-Dev-kit as an `android-native` template: `flake.nix`, `nix-gradlew`, and the
-workflow in `.forgejo/workflows/android.yml`.
+The Flutter-less shell works, locally and on the runner, and has gone back
+into Dev-kit as its `android-native` template, with the workflow as
+`ci/workflows/android-native.yml`. What the phone taught about services on
+MIUI is in Dev-kit's `docs/android-services.md`.
 
 ## 7. Permissions
 
