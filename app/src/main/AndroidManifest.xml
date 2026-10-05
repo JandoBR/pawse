@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-feature android:name="android.hardware.nfc" android:required="false" />
+
     <!-- Lets the app see apps that have a launcher icon, for their names and
          for the block list, without asking to see every package. The rest are
          the apps that can never be blocked, which have to be looked up. -->
@@ -34,12 +38,33 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.Pawse">
 
+        <!-- Rotation is handled in place, so that a dialog waiting for a tag is
+             not lost when the phone is turned over to reach it. -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|keyboard|uiMode"
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Receives scanned keys (pawse://key/<id>). -->
+        <activity
+            android:name=".ScanActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:host="key"
+                    android:scheme="pawse" />
             </intent-filter>
         </activity>
 

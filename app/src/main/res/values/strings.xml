@@ -31,18 +31,45 @@
     <string name="setup_watcher_off">The watcher is off. Pawse needs its accessibility service to know which app is on screen.</string>
     <string name="setup_watcher_stopped">The watcher is switched on but not running, so nothing is being blocked. Switch Pawse off and on again in accessibility settings.</string>
     <string name="setup_open_accessibility">Open accessibility settings</string>
+    <string name="setup_no_keys">No key is registered. A key is an NFC tag that starts and ends a session.</string>
+    <string name="setup_add_key">Add a key</string>
     <string name="setup_no_apps">No apps are on the block list.</string>
     <string name="setup_choose_apps">Choose apps</string>
 
-    <string name="debug_start">Debug: start a session</string>
-    <string name="debug_end">Debug: end the session</string>
-    <string name="debug_note">Stands in for the tag until milestone 3.</string>
-    <string name="scan_too_soon">Too soon after the last switch. Wait three seconds.</string>
-    <string name="scan_not_ready">A session cannot start yet: see above.</string>
+    <string name="scan_started">Pawsed</string>
+    <string name="scan_ended">Unpawsed</string>
+    <string name="scan_refused">This tag is not a key. The session is still on.</string>
 
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
     <string name="back">Back</string>
     <string name="list_search">Search apps</string>
     <string name="list_locked">The block list cannot be changed during a session.</string>
     <string name="list_loading">Loading apps…</string>
     <string name="list_none">No apps match.</string>
+
+    <string name="keys_title">Keys</string>
+    <string name="keys_how">A key is an NFC tag. Scanning any of them starts a session, and scanning any of them ends it. To register a tag that already is a Pawse tag, hold it against the phone now.</string>
+    <string name="keys_locked">Keys cannot be changed during a session.</string>
+    <string name="keys_no_nfc">This phone has no NFC, so it cannot use keys.</string>
+    <string name="keys_nfc_off">NFC is switched off.</string>
+    <string name="keys_open_nfc">Open NFC settings</string>
+    <string name="keys_none">No keys yet.</string>
+    <string name="keys_write">Write a new key</string>
+    <string name="keys_write_how">Hold a tag against the back of the phone and keep it there. Whatever is on the tag will be replaced.</string>
+    <string name="keys_register_title">Register this key?</string>
+    <string name="keys_register_how">This tag will be able to start and end sessions.</string>
+    <string name="keys_register">Register</string>
+    <string name="keys_default_name">Key %1$d</string>
+    <string name="keys_name">Name</string>
+    <string name="keys_rename">Rename</string>
+    <string name="keys_remove">Remove</string>
+    <string name="keys_remove_title">Remove %1$s?</string>
+    <string name="keys_remove_how">The tag will no longer start or end sessions. It can be registered again later.</string>
+    <string name="keys_already">This tag is already a key: %1$s.</string>
+    <string name="keys_not_pawse">This is not a Pawse tag. Use “Write a new key” to make it one.</string>
+    <string name="keys_read_only">This tag is read-only.</string>
+    <string name="keys_too_small">This tag is too small: it holds %1$d bytes and a key needs %2$d.</string>
+    <string name="keys_not_ndef">This kind of tag cannot hold a key.</string>
+    <string name="keys_write_failed">Writing failed. Hold the tag still against the phone and try again.</string>
 </resources>

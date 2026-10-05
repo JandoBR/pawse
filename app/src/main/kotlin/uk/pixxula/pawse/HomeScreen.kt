@@ -10,14 +10,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -32,7 +28,7 @@ fun HomeScreen(
     watcher: WatcherState,
     openAccessibility: () -> Unit,
     openBlockList: () -> Unit,
-    debugToggle: () -> Scan,
+    openKeys: () -> Unit,
 ) {
     val context = LocalContext.current
     Scaffold { insets ->
@@ -83,7 +79,8 @@ fun HomeScreen(
             }
 
             val noApps = session.blocked.isEmpty()
-            if (watcher != WatcherState.ON || noApps) {
+            val noKeys = session.keys.isEmpty()
+            if (watcher != WatcherState.ON || noApps || noKeys) {
                 Card(Modifier.fillMaxWidth()) {
                     Column(
                         Modifier.padding(16.dp),
@@ -104,6 +101,12 @@ fun HomeScreen(
                                 Text(stringResource(R.string.setup_open_accessibility))
                             }
                         }
+                        if (noKeys) {
+                            Text(stringResource(R.string.setup_no_keys))
+                            Button(onClick = openKeys) {
+                                Text(stringResource(R.string.setup_add_key))
+                            }
+                        }
                         if (noApps) {
                             Text(stringResource(R.string.setup_no_apps))
                             Button(onClick = openBlockList) {
@@ -118,23 +121,9 @@ fun HomeScreen(
                 Text(stringResource(R.string.home_block_list))
             }
 
-            var refusal by remember { mutableStateOf<Int?>(null) }
-            OutlinedButton(
-                onClick = {
-                    refusal = when (debugToggle()) {
-                        Scan.TooSoon -> R.string.scan_too_soon
-                        is Scan.NotReady -> R.string.scan_not_ready
-                        else -> null
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(if (session.on) R.string.debug_end else R.string.debug_start))
+            Button(onClick = openKeys, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.keys_title))
             }
-            Text(
-                stringResource(refusal ?: R.string.debug_note),
-                style = MaterialTheme.typography.bodySmall,
-            )
         }
     }
 }

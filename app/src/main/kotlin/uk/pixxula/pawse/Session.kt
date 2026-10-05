@@ -20,7 +20,7 @@ data class Now(val wall: Long, val monotonic: Long)
 /** What a session cannot start without. */
 enum class Missing { WATCHER, KEY, APPS }
 
-/** What came of a scan, or of the debug toggle. */
+/** What came of a scan. */
 sealed interface Scan {
     data object Started : Scan
     data object Ended : Scan
@@ -54,19 +54,6 @@ object Session {
         if (state.keys.none { it.id == keyId }) {
             return state to if (state.on) Scan.Refused else Scan.Unregistered
         }
-        return toggle(state, now, missing)
-    }
-
-    /**
-     * Switches the session. [needsKey] is false only for the debug toggle,
-     * which exists until tags do.
-     */
-    fun toggle(
-        state: SessionState,
-        now: Now,
-        missing: Set<Missing>,
-        needsKey: Boolean = true,
-    ): Pair<SessionState, Scan> {
         val last = state.lastToggle
         // The monotonic clock starts again when the phone does, so a stored
         // time that is ahead of now is from before a restart: not recent.
@@ -77,13 +64,28 @@ object Session {
             return state.copy(on = false, lastToggle = now.monotonic) to Scan.Ended
         }
 
-        val lacking = missing.toMutableSet()
-        if (needsKey && state.keys.isEmpty()) lacking += Missing.KEY
-        if (state.blocked.isEmpty()) lacking += Missing.APPS
+        val lacking = missing(state, missing)
         if (lacking.isNotEmpty()) return state to Scan.NotReady(lacking)
 
         return state.copy(on = true, since = now.wall, lastToggle = now.monotonic) to Scan.Started
     }
+
+    /** Everything a start still lacks: what the phone lacks, and what is stored. */
+    fun missing(state: SessionState, phone: Set<Missing>): Set<Missing> {
+        val lacking = phone.toMutableSet()
+        if (state.keys.isEmpty()) lacking += Missing.KEY
+        if (state.blocked.isEmpty()) lacking += Missing.APPS
+        return lacking
+    }
+
+    /**
+     * The id a tag carries, from its `pawse://key/<id>` record, or null when
+     * the text is anything else.
+     */
+    fun keyId(uri: String): String? =
+        KEY_URI.matchEntire(uri)?.groupValues?.get(1)
+
+    private val KEY_URI = Regex("pawse://key/([A-Za-z0-9_-]{1,64})")
 
     /** The accessibility service was switched off: that ends a session. */
     fun endBecauseWatcherIsOff(state: SessionState): SessionState =
@@ -113,7 +115,7 @@ object Session {
         else state.copy(keys = state.keys + key)
 
     fun renameKey(state: SessionState, id: String, name: String): SessionState =
-        if (state.on) state
+        if (state.on || name.isBlank()) state
         else state.copy(keys = state.keys.map { if (it.id == id) it.copy(name = name) else it })
 
     fun removeKey(state: SessionState, id: String): SessionState =

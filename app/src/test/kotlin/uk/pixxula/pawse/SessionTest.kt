@@ -50,15 +50,29 @@ class SessionTest {
             Scan.NotReady(setOf(Missing.WATCHER)),
             Session.scan(ready, "abc", at(10), setOf(Missing.WATCHER)).second,
         )
-        val noKeys = ready.copy(keys = emptyList())
+    }
+
+    @Test
+    fun whatIsMissingCountsThePhoneAndWhatIsStored() {
+        assertEquals(emptySet<Missing>(), Session.missing(ready, nothingMissing))
         assertEquals(
-            Scan.NotReady(setOf(Missing.KEY)),
-            Session.toggle(noKeys, at(10), nothingMissing).second,
+            setOf(Missing.WATCHER, Missing.KEY, Missing.APPS),
+            Session.missing(SessionState(), setOf(Missing.WATCHER)),
         )
-        assertEquals(
-            Scan.Started,
-            Session.toggle(noKeys, at(10), nothingMissing, needsKey = false).second,
-        )
+    }
+
+    @Test
+    fun aTagCarriesItsIdInAPawseUri() {
+        assertEquals("0123abcd", Session.keyId("pawse://key/0123abcd"))
+        assertEquals(null, Session.keyId("pawse://key/"))
+        assertEquals(null, Session.keyId("pawse://key/a/b"))
+        assertEquals(null, Session.keyId("habitd://habit/0123abcd"))
+        assertEquals(null, Session.keyId("https://example.org/pawse://key/abc"))
+    }
+
+    @Test
+    fun aKeyCannotBeRenamedToNothing() {
+        assertSame(ready, Session.renameKey(ready, "abc", "  "))
     }
 
     @Test
