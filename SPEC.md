@@ -81,15 +81,19 @@ Four native parts, none of which needs the app's own screens to be open:
 
 ### Detecting the app in front
 
-An accessibility service. Android reports every window change
-(`TYPE_WINDOW_STATE_CHANGED`) with the package name, so the cover is up almost
-at once: measured on the phone, about a tenth of a second after a blocked app
-first shows when it is started cold. It is granted by hand in Settings; on Android 13 and
-later a sideloaded app must first be allowed "restricted settings".
+An accessibility service. Android names the app in every window-state event
+(`TYPE_WINDOW_STATE_CHANGED`), so the cover is up almost at once: measured on
+the phone, about a tenth of a second after a blocked app first shows when it
+is started cold. It is granted by hand in Settings; on Android 13 and later a
+sideloaded app must first be allowed "restricted settings".
 
-What counts is every window on screen, not only the one with focus: the
-service asks for the window list, and a blocked app in one half of split
-screen or in a picture-in-picture window counts as being in front.
+The service asks for no window content and no window list, tried on 8 October
+2026. A service that can read the screen makes a bank app refuse to run while
+it is switched on, and that capability is what the bank looks for. So the app
+in front is taken from the event and remembered, and a session start is
+checked against that. The cost is that only the app that came to the front is
+known: a blocked app in one half of split screen, or in a picture-in-picture
+window, with another app focused, is not seen.
 
 The service runs whether or not a session is on, and does nothing when it is
 off. The system starts an enabled accessibility service again after a restart
@@ -131,8 +135,9 @@ An overlay window owned by the accessibility service
 dismissed with back or recents. If the overlay misbehaves on MIUI, the
 alternative is the app's own full-screen activity brought to the front.
 
-The cover takes the whole screen, also when the blocked app is only half of a
-split screen. The app beside it is hidden too until the blocked one is closed.
+The cover takes the whole screen. It goes up when a blocked app comes to the
+front, which is all the service is told; split screen and picture-in-picture
+are not seen without the window list.
 
 A picture-in-picture window is the exception. Nothing the cover offers can
 close a floating window, so covering the whole screen for one would leave the
@@ -422,7 +427,7 @@ Questions the settled draft left unanswered, decided the same day.
 | Q10 | Can Settings be blocked? | Never, nor whatever else hosts the pages of the emergency exit. |
 | Q11 | Calls in a blocked app? | Let through. The whole app is usable while it is ringing or in a call. |
 | Q12 | Notifications from blocked apps? | Hidden during a session and returned after it, by snoozing. Call notifications are exempt. |
-| Q13 | Split screen and picture-in-picture? | The whole screen is covered if any ordinary window on it is a blocked app's. First settled the same way for picture-in-picture, then changed on 5 October 2026 after it locked the phone: a floating window is covered only where it is. |
+| Q13 | Split screen and picture-in-picture? | The whole screen is covered if any ordinary window on it is a blocked app's. First settled the same way for picture-in-picture, then changed on 5 October 2026 after it locked the phone: a floating window is covered only where it is. Since 8 October 2026 neither is seen: the window list was dropped so that bank apps run. |
 | Q14 | The accessibility service is switched off mid-session? | The session ends. Switching it back on does not resume it. |
 | Q15 | A scan to start, from inside a blocked app? | Covered at once. |
 | Q16 | Audio from blocked apps? | Paused, for the whole session. |

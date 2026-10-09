@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pawse</string>
-    <string name="watcher_description">Pawse uses this to know which app is on screen, so that it can cover the apps you chose to block. It reads which app owns each window and nothing inside it.</string>
+    <string name="watcher_description">Pawse uses this to know which app comes to the front, so that it can cover the apps you chose to block. It learns only which app is in front, and reads nothing on the screen.</string>
 
     <string name="cover_title">Pawsed</string>
     <string name="cover_app">%1$s is blocked.</string>
