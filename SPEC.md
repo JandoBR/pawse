@@ -340,8 +340,7 @@ another language can be added later.
 There is no server, so no Rust. The vault files this under Rust, but it is an
 Android project.
 
-Starting point, from Dev-kit. Its `flutter-android` template is used without
-Flutter:
+Starting point: a Flutter/Android template used without Flutter:
 
 * `flake.nix`: the same shell minus `pkgs.flutter`, the `flutter config` line
   and the `web` shell; `app = "pawse"`. The NDK and CMake are not needed
@@ -350,17 +349,16 @@ Flutter:
   project itself.
 * From `android-snippets.md`: `android.builder.sdkDownload=false`, the signing
   block, and the unit-test dependency. The NDK workaround does not apply.
-* `docs/android-on-nixos.md`, `docs/android-signing.md` and
-  `ci/workflows/android.yml`, with Gradle commands in place of Flutter's.
+* the Android-on-NixOS notes, the signing block and the workflow, with Gradle
+  commands in place of Flutter's.
 
 From HaBytes: `NfcScanActivity.kt` for reading tags, the tag-writing code
 behind `lib/platform/nfc.dart` rewritten in Kotlin, and `Store.kt` as the
 pattern for the native store.
 
-The Flutter-less shell works, locally and on the runner, and has gone back
-into Dev-kit as its `android-native` template, with the workflow as
-`ci/workflows/android-native.yml`. What the phone taught about services on
-MIUI is in Dev-kit's `docs/android-services.md`.
+The Flutter-less shell works, locally and on the runner, and is reusable as a
+plain Android template. What the phone taught about services on MIUI is written
+down separately.
 
 ## 7. Permissions
 
@@ -516,7 +514,7 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
 
 ## 11. Milestones
 
-1. **Block one app** — the project from Dev-kit, an accessibility service, a
+1. **Block one app** — a bare project, an accessibility service, a
    hard-coded package, the cover. Answers section 10 before anything else is
    built. *Built: the calculator and YouTube are covered whenever the service
    is on. Left to try: a day of normal use. The hard-coded list went with
@@ -546,9 +544,9 @@ Answered so far, on the POCO X3 GT (Android 13, MIUI 14.0.6), over adb, on
    not be pressed afterwards, so playing again mid-session did not arise.
    Not tried: a call in a blocked app. Notifications come back up to fifteen
    minutes after a session, which is accepted as it is.*
-6. **Releases** — the signing key and the workflow, from Dev-kit. *Built:
+6. **Releases** — the signing key and the workflow. *Built:
    every push that touches the app is tested, built, signed and published as
-   a release on Forgejo, version `1.0.<run number>`. The key is Pawse's own
+   a release on GitHub, version `1.0.<run number>`. The key is Pawse's own
    (`CN=Pawse`), backed up with sops in `nixos-config` as
    `PAWSE_KEYSTORE_BASE64` and `PAWSE_KEYSTORE_PASSWORD`, and held by CI as
    repository secrets; no copy needs to stay on a development machine.*

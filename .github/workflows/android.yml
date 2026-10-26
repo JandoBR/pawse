@@ -3,9 +3,6 @@ name: Android
 # Tests the app, builds the signed APK and publishes it as a release. Each
 # release has a higher version than the last, so it installs over the previous
 # one (and updaters such as Obtainium can follow the releases).
-#
-# Signing needs the repository secrets described in docs/android-signing.md of
-# Dev-kit. Without them the APK is signed with a throwaway debug key.
 on:
   push:
     branches: [main]
@@ -17,17 +14,14 @@ on:
       - "gradlew"
       - "nix-gradlew"
       - "flake.*"
-      - "scripts/publish-release"
-      - ".forgejo/workflows/android.yml"
+      - ".github/workflows/android.yml"
   workflow_dispatch:
 
-# The runner has Nix installed but not on PATH. NIX_CONFIG avoids the `nixbld`
-# group and the sandbox, which the runner does not have.
+permissions:
+  contents: write
+
 env:
-  # 1.0.<run number>: unique and always increasing, which Android needs to
-  # accept one build as an update of another.
   NAME: Pawse
-  VERSION: 1.0.${{ github.run_number }}
   NIX_CONFIG: |
     build-users-group =
     sandbox = false
@@ -37,7 +31,31 @@ jobs:
   android:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      # The runner image ships its own Android SDK, .NET and CodeQL databases.
+      # None of them are used here, and the Nix build needs the space more.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune -af || true
+          df -h /
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            build-users-group =
+            sandbox = false
+            experimental-features = nix-command flakes
+
+      # 1.0.<run number>: unique and always increasing, which Android needs to
+      # accept one build as an update of another. The 4 continues the numbering
+      # the Forgejo pipeline reached, so these releases are not downgrades.
+      - name: Work out the version
+        run: |
+          number=$(( GITHUB_RUN_NUMBER + 4 ))
+          echo "VERSION=1.0.$number" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$number" >> "$GITHUB_ENV"
 
       - name: Set up signing
         env:
@@ -55,9 +73,7 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          BUILD_NUMBER: ${{ github.run_number }}
         run: |
-          export PATH="/nix/var/nix/profiles/default/bin:$HOME/.nix-profile/bin:$PATH"
           nix develop --command bash -c '
             set -euo pipefail
             ./nix-gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease \
@@ -66,8 +82,9 @@ jobs:
 
       - name: Publish the release
         env:
-          FORGEJO_API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
-          FORGEJO_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          FORGEJO_API="$(echo "$FORGEJO_API" | sed 's|\([^:]\)//|\1/|g')" \
-            scripts/publish-release "$VERSION" app/build/outputs/apk/release/app-release.apk
+          cp app/build/outputs/apk/release/app-release.apk "pawse-$VERSION.apk"
+          gh release create "$VERSION" "pawse-$VERSION.apk" \
+            --title "$VERSION" \
+            --notes "Signed APK built from ${GITHUB_SHA}."

@@ -24,13 +24,13 @@ services start again until the accessibility service is switched off and on.
 ## Building
 
 Release builds are signed with Pawse's own key, which CI holds as repository
-secrets and `nixos-config` backs up with sops (`PAWSE_KEYSTORE_BASE64`,
-`PAWSE_KEYSTORE_PASSWORD`); see `docs/android-signing.md` in Dev-kit. Without
-the key in the environment, a release build falls back to the debug key.
+secrets and which is backed up encrypted outside the repository. Without the
+key in the environment, a release build falls back to the debug key, which
+cannot update an installed copy.
 
 Everything runs inside the Nix shell, which provides the JDK and the Android
-SDK. Gradle is run through `nix-gradlew`, as explained in Dev-kit's
-`docs/android-on-nixos.md`.
+SDK. Gradle is run through `nix-gradlew` so the build uses that SDK rather than
+whatever happens to be installed.
 
 ```sh
 nix develop
