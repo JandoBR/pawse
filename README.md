@@ -3,6 +3,11 @@
 A focus mode for Android: chosen apps are covered until you scan an NFC tag,
 which is meant to live inside a plushie. Scan it to start, scan it to stop.
 
+<p align="center">
+  <img src="docs/screenshots/cover.jpg" width="260" alt="A blocked app while a session is on">
+  <img src="docs/screenshots/home.jpg" width="260" alt="Pawse at rest: the block list and the keys it knows">
+</p>
+
 `SPEC.md` is the specification; its section 9 records the decisions, section
 10 what the phone has answered, and section 11 the order of work. Milestones 1
 to 5 are built: a tag starts and ends a session, a session covers the apps on
